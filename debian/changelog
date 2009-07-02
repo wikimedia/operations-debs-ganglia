@@ -1,3 +1,11 @@
+ganglia (3.1.2-2) unstable; urgency=low
+
+  * Tweaks to ganglia-webfrontend debconf templates
+  * If we have an old gmond.conf convert it. Closes: #512154 
+  * Changes to the example apache aliases. Closes: #518255
+
+ -- Stuart Teasdale <sdt@debian.org>  Thu, 02 Jul 2009 19:59:35 +0100
+
 ganglia (3.1.2-1) experimental; urgency=low
 
   * New upstream version with security fixes. (Closes: #512365.)
