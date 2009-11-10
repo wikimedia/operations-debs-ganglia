@@ -9,9 +9,9 @@ Standards-Version: 3.8.2
 Package: ganglia-monitor
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, adduser, libganglia1 (=${binary:Version})
-Description: cluster system monitoring daemon
+Description: cluster monitoring toolkit - node daemon
  Ganglia is a scalable, real-time cluster monitoring environment 
- with that collects cluster statistics in an open well-defined XML format. 
+ that collects cluster statistics in an open and well-defined XML format.
  .
  This package contains the monitor core program.
 
@@ -19,20 +19,20 @@ Package: gmetad
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, adduser, libganglia1 (=${binary:Version})
 Suggests: ganglia-monitor, ganglia-webfrontend
-Description: meta-daemon for ganglia cluster monitoring toolkit
+Description: cluster monitoring toolkit - Ganglia Meta-Daemon
  Ganglia is a scalable, real-time cluster monitoring environment 
- with that collects cluster statistics in an open well-defined XML format. 
+ that collects cluster statistics in an open and well-defined XML format.
  .
- This package contains the 'gmetad', which collects information from ganglia
- monitor clients, and writes them to RRD databases.
+ This package contains the 'gmetad' daemon, which collects information from
+ ganglia monitor clients and writes it to RRD databases.
 
 Package: libganglia1
 Architecture: any
 Section: libs
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: ganglia cluster system monitor toolkit (shared libraries)
+Description: cluster monitoring toolkit - shared libraries
  Ganglia is a scalable, real-time cluster monitoring environment 
- with that collects cluster statistics in an open well-defined XML format. 
+ that collects cluster statistics in an open and well-defined XML format.
  .
  This package contains shared libraries.
 
@@ -40,9 +40,9 @@ Package: libganglia1-dev
 Architecture: any
 Section: libdevel
 Depends: ${misc:Depends}, libganglia1 (=${binary:Version}), ${shlibs:Depends}
-Description: ganglia cluster system monitor toolkit (devel libraries)
+Description: cluster monitoring toolkit - development libraries
  Ganglia is a scalable, real-time cluster monitoring environment 
- with that collects cluster statistics in an open well-defined XML format. 
+ that collects cluster statistics in an open and well-defined XML format.
  .
  This package contains development libraries.
 
@@ -50,10 +50,10 @@ Package: ganglia-webfrontend
 Architecture: all
 Depends: ${misc:Depends}, apache | apache-ssl | apache-perl | apache2, php5 | php5-cgi | libapache2-mod-php5, rrdtool, debconf (>= 0.5), libgd2-noxpm | libgd2-xpm
 Recommends: gmetad, php5-gd
-Description: ganglia cluster monitoring toolkit web frontend
+Description: cluster monitoring toolkit - web front-end
  Ganglia is a scalable, real-time cluster monitoring environment
- with that collects cluster statistics in an open well-defined XML
+ that collects cluster statistics in an open and well-defined XML
  format.
  .
- This package contains the PHP based web frontend, which displays
+ This package contains the PHP-based web front-end, which displays
  information gathered by 'gmetad'.

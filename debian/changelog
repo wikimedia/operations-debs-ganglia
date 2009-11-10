@@ -1,3 +1,34 @@
+ganglia (3.1.2-2.1) unstable; urgency=low
+
+  * Non-maintainer upload by arrangement with maintainer.
+
+  [ Jonathan Wiltshire ]
+  * Debconf templates and debian/control reviewed by the debian-l10n-
+    english team as part of the Smith review project. Closes: #539204
+  * Debconf translation updates:
+     - Swedish (closes: #539217)
+     - Finnish (closes: #539325)
+     - Czech (closes: #539614)
+     - Basque (closes: #539872)
+     - French (closes: #540038)
+     - Italian (closes: #540200)
+     - German (closes: #540220)
+     - Spanish (closes: #540708)
+     - Portugese (closes: #540769)
+     - Russian (closes: #540849)
+     - Vietnamese (closes: #547916)
+     - Japanese (closes: #551022)
+  * Refactor ganglia-webfrontend.{post,pre}inst for changed templates, and
+    simultaneously purge old code now that apache2 is the only package in
+    Squeeze. Use the a2enmod and a2dismod helpers to enable and disable the
+    Apache module instead of directly creating symbolic links.
+
+  [ Christian Perrier ]
+  * Debconf translation updates:
+    - Galician (Marce Villarino).  Closes: #555451
+
+ -- Christian Perrier <bubulle@debian.org>  Tue, 10 Nov 2009 22:02:43 +0100
+
 ganglia (3.1.2-2) unstable; urgency=low
 
   * Tweaks to ganglia-webfrontend debconf templates
