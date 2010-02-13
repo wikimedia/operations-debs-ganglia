@@ -16,8 +16,7 @@ if ! getent passwd ganglia >/dev/null; then
 fi
 
 if [ -d /var/lib/ganglia ]; then
-  mkdir -p /var/lib/ganglia/rrds
-  chown -R ganglia:ganglia /var/lib/ganglia
+  chown ganglia:ganglia /var/lib/ganglia
   chmod 0755 /var/lib/ganglia
 fi
 #if we have an old 2.5.x gmond

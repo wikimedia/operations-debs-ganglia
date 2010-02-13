@@ -3,8 +3,9 @@ ganglia (3.1.2-3) unstable; urgency=high
   * Adjust the default umask of the daemons. Closes: #567175
   * Fix in postinst to change the umask of existing rrds
   * Add build dependency for libdbi0-dev. Closes: #569395
+  * Horrid directory mangling in postinst hacked around for permissions 
 
- -- Stuart Teasdale <sdt@debian.org>  Sat, 13 Feb 2010 22:05:23 +0000
+ -- Stuart Teasdale <sdt@debian.org>  Sat, 13 Feb 2010 23:15:02 +0000
 
 ganglia (3.1.2-2.1) unstable; urgency=low
 
