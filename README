@@ -2,11 +2,11 @@ Name
     ganglia - distributed monitoring system
 
 Version
-    ganglia 3.1.2
+    ganglia 3.1.7
 
     The latest version of this software and document will always be found at
     http://ganglia.sourceforge.net/. You are currently reading $Revision:
-    1705 $ of this document.
+    2209 $ of this document.
 
 Synopsis
          ______                  ___
@@ -266,8 +266,8 @@ Installation
     If you installed ganglia using RPMs then these files will be installed
     when you install the RPM. The RPM is installed simply by running
 
-      % rpm -Uvh ganglia-gmond-3.1.2.i386.rpm
-      % rpm -Uvh ganglia-gmetad-3.1.2.i386.rpm
+      % rpm -Uvh ganglia-gmond-3.1.7.i386.rpm
+      % rpm -Uvh ganglia-gmetad-3.1.7.i386.rpm
 
     Once you have the necessary binaries installed, you can test your
     installation by running
@@ -339,7 +339,7 @@ Installation
 
     Installation of the web frontend is simplified on Linux by using rpm.
 
-      % rpm -Uvh ganglia-web-3.1.2-1.i386.rpm
+      % rpm -Uvh ganglia-web-3.1.7-1.i386.rpm
       Preparing...                ########################################### [100%]
          1:ganglia-web            ########################################### [100%]
 
@@ -373,7 +373,7 @@ Configuration
     If you want to convert a 2.5.x configuration file to 3.x file format,
     run the following command
 
-      % gmond --convert ./old_25_config.conf  
+      % gmond --convert ./old_25_config.conf
 
     and gmond with output the equivalent 3.x configuration file to stdout.
     You can then redirect that output to a new configuration file which can
@@ -451,7 +451,7 @@ Commandline Tools
     commandline option
 
       % gmetric --help
-      gmetric 3.1.2
+      gmetric 3.1.7
 
       Purpose:
         The Ganglia Metric Client (gmetric) announces a metric
@@ -514,7 +514,7 @@ Commandline Tools
     "--help" option
 
       % gstat --help
-      gstat 3.1.2
+      gstat 3.1.7
 
       Purpose:
         The Ganglia Status Client (gstat) connects with a
@@ -743,8 +743,8 @@ Frequently Asked Questions (FAQ)
         Solaris and Tru64. He also helped with the IRIX port.
 
            State of the IRIX port:
-   
-           *  CPU percentage stuff hasn't improved despite my efforts.  I fear there
+           
+   *  CPU percentage stuff hasn't improved despite my efforts.  I fear there
               may be a flaw in the way I'm summing counters for all the CPUs.
            *  Auto-detection of network interfaces apparently segfaults.
            *  Memory and load reporting appear to be running properly.
@@ -753,16 +753,16 @@ Frequently Asked Questions (FAQ)
            *  gmetad untested.
            *  Monitoring core apparently stable in foreground, background being tested
            (had a segfault earlier).
-   
-           State of the Tru64 port:
-   
-           *  CPU percentage stuff here works perfectly.
+           
+   State of the Tru64 port:
+           
+   *  CPU percentage stuff here works perfectly.
            *  Memory and swap usage stats are suspected to be inaccurate.
            *  Total/running processes are not reported.
            *  gmetad untested.
            *  Monitoring core apparently stable in foreground and background.
-   
-           State of the Solaris port:
+           
+   State of the Solaris port:
            *  CPU percentages are slightly off, but correct enough for trending
               purposes.
            *  Load, ncpus, CPU speed, breads/writes, lreads/writes, phreads/writes,
@@ -772,8 +772,8 @@ Frequently Asked Questions (FAQ)
               further.
            *  Total processes are counted, but not running ones.
            *  gmetad appears stable
-   
-           Anyway, all three ports I've been messing with are usable and fairly
+           
+   Anyway, all three ports I've been messing with are usable and fairly
            stable.  Although there are areas for improvement I think we really can't
            keep hogging all this good stuff - what I'm looking at is ready for
            release.
@@ -782,81 +782,36 @@ Frequently Asked Questions (FAQ)
         Debian packages for 2.5 are available from the main Debian archive
         for all releases.
 
-        There was never an oficial Debian package for 3.0 but packages for
-        3.1 are available from Debian experimental and will be available in
-        the Debian archive as soon as they are stabilized.
+        There was never an oficial Debian package for 3.0 and so if you need
+        to use that branch you will need to build your own binaries.
 
-        If you are interested on using them (and help them stabilize) you
-        can get them from:
-
-          http://packages.debian.org/experimental/ganglia-monitor
+        Packages for 3.1 are available from Debian (and therefore derivative
+        distributions like Ubuntu) standard repositories.
 
     How should I configure multihomed machines?
-        Here is an email that Matt Massie sent to a user having problems
-        with multihomed machines
+        Various issues arise when a multihomed machine is running the gmond
+        agent.
 
-           i need to add a section in the documentation talking about this since it 
-           seems to be a common question.
-   
-           when you use...
-   
-           mcast_if eth1
-   
-           .. in /etc/ganglia/gmond.conf that tells gmond to send its data out the "eth1"
-           network interface but that doesn't necessarily mean that the source
-           address of the packets will match the "eth1" interface.  to make sure that
-           data sent out eth1 has the correct source address run the following...
-   
-           % route add -host 239.2.11.71 dev eth1
-   
-           ... before starting gmond.  that should do the trick for you.
-   
-           -matt
-   
-           > I have seen some post related to some issues
-           > with gmond + multicast running on a dual nic
-           > frontend.
-           > 
-           > Currently I am experiencing a weird behavior
-           > 
-           > I have the following setup:
-           > 
-           >   -----------------------
-           >   | web server + gmetad |
-           >   -----------------------
-           >              |
-           >              |
-           >              |
-           >     ----------------------
-           >     |   eth0 A.B.C.112   |
-           >     |                    |
-           >     |  Frontend + gmond  |
-           >     |                    |
-           >     | eth1 192.168.100.1 |
-           >     ----------------------
-           >              |
-           >              |
-           > 
-           >        26 nodes each
-           >           gmond
-           > 
-           > In the frontend /etc/gmond.conf I have the
-           > following statement: mcast_if  eth1
-           > 
-           > The 26 nodes are correctly reported. 
-           > 
-           > However the Frontend is never reported.
-           > 
-           > I am running iptables on the Frontend, and I am seing
-           > things like:
-           > 
-           > INPUT packet died: IN=eth1 OUT= MAC= SRC=A.B.C.112 DST=239.2.11.71 
-           > LEN=36 TOS=0x00 PREC=0x00 TTL=1 ID=53740 DF PROTO=UDP SPT=41608 DPT=8649
-           > LEN=16 
-           > 
-           > I would have expected the source to be 192.168.100.1 with mcast_if eth1
-           > 
-           > Any idea ?
+        Sending multicast packets out on the right interface: the mcast_if
+        option can be declared in the udp_send_channel to force outgoing
+        multicast packets to use a particular interface. The system
+        administrator may also be able to make other platform-specific
+        configuration settings through the OS to achieve the desired
+        behaviour.
+
+        Ensuring that outgoing metric packets are always sent with the same
+        source address: the bind and bind_hostname parameters are the
+        solution. Either (but not both) of these can be specified in the
+        udp_send_channel if required. See the gmond.conf man page for
+        details.
+
+        Previous advice given in this document suggested adding a route like
+        so:
+
+        route add -host 239.2.11.71 dev eth1
+
+        and this method is still valid, but it will be over-ridden by the
+        bind or bind_hostname setting.
 
     How should I configure my Cisco Catalyst Switches?
         Perhaps information regarding gmond on networks set up through cisco
@@ -877,7 +832,7 @@ Getting Support
       The tired and thirsty prospector threw himself down at the edge of the 
       watering hole and started to drink. But then he looked around and saw 
       skulls and bones everywhere. "Uh-oh," he thought. "This watering hole 
-      is reserved for skeletons." --Jack Handey      
+      is reserved for skeletons." --Jack Handey
 
     There are three mailing lists available to you: "ganglia-general",
     "ganglia-developers" and "ganglia-announce". You can join these lists or

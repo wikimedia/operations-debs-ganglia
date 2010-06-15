@@ -51,8 +51,8 @@ static cfg_opt_t host_opts[] = {
 
 static cfg_opt_t globals_opts[] = {
   CFG_BOOL("daemonize", 1, CFGF_NONE),
-  CFG_BOOL("setuid", 1, CFGF_NONE),
-  CFG_STR("user", "nobody", CFGF_NONE),
+  CFG_BOOL("setuid", 1 - NO_SETUID, CFGF_NONE),
+  CFG_STR("user", SETUID_USER, CFGF_NONE),
   /* later i guess we should add "group" as well */
   CFG_INT("debug_level", 0, CFGF_NONE),
   CFG_INT("max_udp_msg_len", 1472, CFGF_NONE),
@@ -86,6 +86,8 @@ static cfg_opt_t udp_send_channel_opts[] = {
   CFG_STR("host", NULL, CFGF_NONE ),
   CFG_INT("port", -1, CFGF_NONE ),
   CFG_INT("ttl", 1, CFGF_NONE ),
+  CFG_STR("bind", NULL, CFGF_NONE),
+  CFG_BOOL("bind_hostname", 0, CFGF_NONE),
   CFG_END()
 };
 
@@ -111,6 +113,9 @@ static cfg_opt_t tcp_accept_channel_opts[] = {
 
 static cfg_opt_t metric_opts[] = {
   CFG_STR("name", NULL, CFGF_NONE ),
+#ifdef HAVE_LIBPCRE
+  CFG_STR("name_match", NULL, CFGF_NONE ),
+#endif
   CFG_FLOAT("value_threshold", -1, CFGF_NONE),
   CFG_STR("title", NULL, CFGF_NONE ),
   CFG_END()
@@ -284,9 +289,10 @@ Ganglia_udp_send_channels_create( Ganglia_pool p, Ganglia_gmond_config config )
     {
       cfg_t *udp_send_channel;
       char *mcast_join, *mcast_if, *host;
-      int port, ttl;
+      int port, ttl, bind_hostname;
       apr_socket_t *socket = NULL;
       apr_pool_t *pool = NULL;
+      char *bind_address;
 
       udp_send_channel = cfg_getnsec( cfg, "udp_send_channel", i);
       host           = cfg_getstr( udp_send_channel, "host" );
@@ -294,12 +300,20 @@ Ganglia_udp_send_channels_create( Ganglia_pool p, Ganglia_gmond_config config )
       mcast_if       = cfg_getstr( udp_send_channel, "mcast_if" );
       port           = cfg_getint( udp_send_channel, "port");
       ttl            = cfg_getint( udp_send_channel, "ttl");
+      bind_address   = cfg_getstr( udp_send_channel, "bind" );
+      bind_hostname  = cfg_getbool( udp_send_channel, "bind_hostname");
 
       debug_msg("udp_send_channel mcast_join=%s mcast_if=%s host=%s port=%d\n",
                 mcast_join? mcast_join:"NULL", 
                 mcast_if? mcast_if:"NULL",
                 host? host:"NULL",
                 port);
+
+      if(bind_address != NULL && bind_hostname == cfg_true)
+        {
+          err_msg("udp_send_channel: bind and bind_hostname are mutually exclusive, both parameters can't be specified for the same udp_send_channel\n");
+          exit(1);
+        }
 
       /* Create a subpool */
       apr_pool_create(&pool, context);
@@ -308,7 +322,7 @@ Ganglia_udp_send_channels_create( Ganglia_pool p, Ganglia_gmond_config config )
       if( mcast_join )
         {
           /* We'll be listening on a multicast channel */
-          socket = create_mcast_client(pool, mcast_join, port, ttl, mcast_if);
+          socket = create_mcast_client(pool, mcast_join, port, ttl, mcast_if, bind_address, bind_hostname);
           if(!socket)
             {
               err_msg("Unable to join multicast channel %s:%d. Exiting\n",
@@ -319,7 +333,7 @@ Ganglia_udp_send_channels_create( Ganglia_pool p, Ganglia_gmond_config config )
       else
         {
           /* Create a UDP socket */
-          socket = create_udp_client( pool, host, port );
+          socket = create_udp_client( pool, host, port, mcast_if, bind_address, bind_hostname );
           if(!socket)
             {
               err_msg("Unable to create UDP client for %s:%d. Exiting.\n",

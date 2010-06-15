@@ -2,20 +2,22 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>Ganglia Monitoring Daemon v3.1.2 Configuration</title>
+<title>Ganglia Monitoring Daemon v3.1.7 Configuration</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<link rev="made" href="mailto:feedback@suse.de" />
+<link rev="made" href="mailto:root@localhost" />
 </head>
 
 <body style="background-color: white">
 <table border="0" width="100%" cellspacing="0" cellpadding="3">
 <tr><td class="block" style="background-color: #cccccc" valign="middle">
-<big><strong><span class="block">&nbsp;Ganglia Monitoring Daemon v3.1.2 Configuration</span></strong></big>
+<big><strong><span class="block">&nbsp;Ganglia Monitoring Daemon v3.1.7 Configuration</span></strong></big>
 </td></tr>
 </table>
 
-<p><a name="__index__"></a></p>
+
 <!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
 
 <ul>
 
@@ -40,9 +42,11 @@
 	<li><a href="#notes">NOTES</a></li>
 	<li><a href="#copyright">COPYRIGHT</a></li>
 </ul>
+
+<hr name="index" />
+</div>
 <!-- INDEX END -->
 
-<hr />
 <p>
 </p>
 <hr />
@@ -152,7 +156,7 @@ like to save some bandwith.</p>
 to zero (0), <strong>gmond</strong> will never delete a host from its list even when 
 a remote host has stopped reporting.  If <strong>host_dmax</strong> is set to a
 positive number then <strong>gmond</strong> will flush a host after it has not heard
-from it for <strong>host_dmax</strong> seconds.  By the way, dmax means ``delete max''.</p>
+from it for <strong>host_dmax</strong> seconds.  By the way, dmax means &quot;delete max&quot;.</p>
 <p>The <strong>cleanup_threshold</strong> is the minimum amount of time before gmond
 will cleanup any hosts or metrics where <strong>tn</strong> &gt; <strong>dmax</strong> a.k.a. expired
 data.</p>
@@ -173,7 +177,7 @@ value is the minimum number of seconds between resends.</p>
 <p>The <strong>module_dir</strong> is an optional parameter indicating the directory where
 the DSO modules are to be located.  If absent, the value to use is set at
 configure time with the --with-moduledir option which will default if omitted
-to the a subdirectory named ``ganglia'' in the directory where libganglia will
+to the a subdirectory named &quot;ganglia&quot; in the directory where libganglia will
 be installed.</p>
 <p>For example, in a 32-bit Intel compatible Linux host that is usually:</p>
 <pre>
@@ -184,8 +188,9 @@ be installed.</p>
 <p>You can define as many <strong>udp_send_channel</strong> sections as you like within
 the limitations of memory and file descriptors.  If <strong>gmond</strong> is configured
 as <strong>mute</strong> this section will be ignored.</p>
-<p>The <strong>udp_send_channel</strong> has a total of five attributes: <strong>mcast_join</strong>,
-<strong>mcast_if</strong>, <strong>host</strong>, <strong>port</strong> and <strong>ttl</strong>.</p>
+<p>The <strong>udp_send_channel</strong> has a total of seven attributes: <strong>mcast_join</strong>,
+<strong>mcast_if</strong>, <strong>host</strong>, <strong>port</strong>, <strong>ttl</strong>, <strong>bind</strong> and <strong>bind_hostname</strong>.
+<strong>bind</strong> and <strong>bind_hostname</strong> are mutually exclusive.</p>
 <p>For example, the 2.5.x version gmond would send on the following single channel
 by default...</p>
 <pre>
@@ -196,9 +201,15 @@ by default...</p>
 <p>The <strong>mcast_join</strong> and <strong>mcast_if</strong> attributes are optional.  When specified
 <strong>gmond</strong> will create the UDP socket and join the <strong>mcast_join</strong> multicast group
 and send data out the interface specified by <strong>mcast_if</strong>.</p>
+<p>You can use the <strong>bind</strong> attribute to bind to a particular local address to
+be used as the source for the multicast packets sent or let gmond resolve the
+default hostname if <strong>bind_hostname</strong> = yes.</p>
 <p>If only a <strong>host</strong> and <strong>port</strong> are specified then <strong>gmond</strong> will send unicast UDP
-messages to the hosts specified.  You could specify multiple unicast hosts
-for redundancy as <strong>gmond</strong> will send UDP messages to all UDP channels.</p>
+messages to the hosts specified.</p>
+<p>You could specify multiple unicast hosts for redundancy as <strong>gmond</strong> will send
+UDP messages to all UDP channels.</p>
+<p>Be carefull though not to mix multicast and unicast attributes in the same
+udp_send_channel definition.</p>
 <p>For example...</p>
 <pre>
   udp_send_channel {
@@ -303,9 +314,10 @@ within the limitations of memory.  A <strong>collection_group</strong> has
 the following attributes: <strong>collect_once</strong>, <strong>collect_every</strong>
 and <strong>time_threshold</strong>.  A <strong>collection_group</strong> must also contain one
 or more <strong>metric</strong> sections.</p>
-<p>The <strong>metric</strong> section has the following attributes: <strong>name</strong>,
-<strong>value_threshold</strong> and <strong>title</strong>.  For a list of available metric 
-names, run the following command:</p>
+<p>The <strong>metric</strong> section has the following attributes: (one of <strong>name</strong> 
+or <strong>name_match</strong>; <strong>name_match</strong> is only permitted if pcre support is
+compiled in), <strong>value_threshold</strong> and <strong>title</strong>.  For a list of 
+available metric names, run the following command:</p>
 <pre>
   % gmond -m</pre>
 <p>Here is an example of a collection group for a static metric...</p>
@@ -357,6 +369,25 @@ collection group is send to the <strong>udp_send_channel</strong>s defined.</p>
 even when only a single <strong>value_threshold</strong> is surpassed.</p>
 <p>In addition a user friendly title can be substituted for the metric name
 by including a <strong>title</strong> within the <strong>metric</strong> section.</p>
+<p>By using the <strong>name_match</strong> parameter instead of <strong>name</strong>, it is possible
+to use a single definition to configure multiple metrics that match a
+regular expression.  The perl compatible regular expression (pcre) syntax
+is used.  This approach is particularly useful for a series of metrics
+that may vary in number between reboots (e.g. metric names that
+are generated for each individual NIC or CPU core).</p>
+<p>Here is an example of using the <strong>name_match</strong> directive to enable
+the multicpu metrics:</p>
+<pre>
+  metric {
+    name_match = &quot;multicpu_([a-z]+)([0-9]+)&quot;
+    value_threshold = 1.0
+    title = &quot;CPU-\\2 \\1&quot;
+  }</pre>
+<p>Note that in the example above, there are two matches: the alphabetical
+match matches the variations of the metric name (e.g. <strong>idle</strong>, <strong>system</strong>)
+while the numeric match matches the CPU core number.  The second thing
+to note is the use of substitutions within the argument to <strong>title</strong>.</p>
+<p>If both <strong>name</strong> and <strong>name_match</strong> are specified, then <strong>name</strong> is ignored.</p>
 <p>
 </p>
 <h2><a name="modules">Modules</a></h2>
@@ -371,12 +402,12 @@ structure if the module was developed in C/C++.  Alternatively, the
 implemented in a interpreted language such as python.  A <strong>language</strong> 
 designation must be specified as a string value for each module.  The 
 <strong>language</strong> directive must correspond to the source code language in 
-which the module was implemented (ex. language = ``python'').  If a 
+which the module was implemented (ex. language = &quot;python&quot;).  If a 
 <strong>language</strong> directive does not exist for the module, the assumed 
-language will be ``C/C++''. The <strong>enabled</strong> directive allows a metric module
+language will be &quot;C/C++&quot;. The <strong>enabled</strong> directive allows a metric module
 to be easily enabled or disabled through the configuration file. If the
 <strong>enabled</strong> directive is not included in the module configuration, the 
-enabled state will default to ``yes''. One thing to note is that if a 
+enabled state will default to &quot;yes&quot;. One thing to note is that if a 
 module has been disabled yet the metric which that module implements 
 is still listed as part of a collection group, gmond will produce a 
 warning message.  However gmond will continue to function normally 
@@ -451,7 +482,7 @@ for an IPv6 address is 128 to represent a single host).</p>
     }
   }</pre>
 <p>This ACL will by default allow all traffic unless it comes from the 
-two subnets specified with action = ``deny''.</p>
+two subnets specified with action = &quot;deny&quot;.</p>
 <p>
 </p>
 <hr />
@@ -493,7 +524,7 @@ a useful starting point for creating your own custom configuration.</p>
 <p>Copyright (c) 2005 The University of California, Berkeley</p>
 <table border="0" width="100%" cellspacing="0" cellpadding="3">
 <tr><td class="block" style="background-color: #cccccc" valign="middle">
-<big><strong><span class="block">&nbsp;Ganglia Monitoring Daemon v3.1.2 Configuration</span></strong></big>
+<big><strong><span class="block">&nbsp;Ganglia Monitoring Daemon v3.1.7 Configuration</span></strong></big>
 </td></tr>
 </table>
 

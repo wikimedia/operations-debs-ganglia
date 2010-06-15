@@ -36,6 +36,9 @@
 /* GANGLIA_NANO_VERSION */
 #undef GANGLIA_NANO_VERSION
 
+/* GANGLIA_VERSION_FULL */
+#undef GANGLIA_VERSION_FULL
+
 /* GSTATUS */
 #undef GSTATUS
 
@@ -93,6 +96,9 @@
 /* Define to 1 if you have the `odm' library (-lodm). */
 #undef HAVE_LIBODM
 
+/* Define to 1 if you have the `pcre' library (-lpcre). */
+#undef HAVE_LIBPCRE
+
 /* Define to 1 if you have the `perfstat' library (-lperfstat). */
 #undef HAVE_LIBPERFSTAT
 
@@ -134,6 +140,12 @@
 
 /* Define to 1 if you have the <net/raw.h> header file. */
 #undef HAVE_NET_RAW_H
+
+/* Define to 1 if you have the <pcre.h> header file. */
+#undef HAVE_PCRE_H
+
+/* Define to 1 if you have the <pcre/pcre.h> header file. */
+#undef HAVE_PCRE_PCRE_H
 
 /* Define to 1 if you have the <poll.h> header file. */
 #undef HAVE_POLL_H
@@ -249,6 +261,12 @@
 /* NETBSD */
 #undef NETBSD
 
+/* NO_SETGID */
+#undef NO_SETGID
+
+/* NO_SETUID */
+#undef NO_SETUID
+
 /* OPENBSD */
 #undef OPENBSD
 
@@ -272,6 +290,15 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* REL */
+#undef REL
+
+/* SETGID_GROUP */
+#undef SETGID_GROUP
+
+/* SETUID_USER */
+#undef SETUID_USER
 
 /* SOLARIS */
 #undef SOLARIS

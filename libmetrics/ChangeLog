@@ -1,7 +1,42 @@
-2009-01-28 23:04  bnicholes
+2010-02-17 11:03  d_pocock
 
-	* [r1964]
-	  Tagging 3.1.2 (SVN r1963)
+	* [r2288]
+	  Tag 3.1.7 from r2287
+
+2010-02-02 16:01  d_pocock
+
+	* [r2261]
+	  Improve comments in AIX code (backport r2260)
+
+2010-01-28 11:51  d_pocock
+
+	* [r2252]
+	  merge AIX changes contributed and tested by Michael (r2234,
+	  r2235, r2236, r2237, r2238, r2239, r2244) from branch
+	  monitor-core-3.1-aix
+
+2010-01-08 17:04  d_pocock
+
+	* [r2197]
+	  libmetrics: solaris: avoid conflict with ncpus extern in old
+	  versions of <sys/cpuvar.h> (backport r2153)
+
+2010-01-08 15:51  d_pocock
+
+	* [r2192]
+	  libmetrics: freebsd fixes for crashes and disk statistics
+	  (BUG153) (backport r2126)
+
+2009-12-02 07:06  carenas
+
+	* [r2131]
+	  libmetrics: dragonflybsd: fix FTBFS for >=2.4
+
+2009-08-10 10:19  d_pocock
+
+	* [r2012]
+	  Bug 237: Seg fault on Solaris where first CPU not in slot 0
+	  (backport r2006 and r2008 from trunk)
 
 2009-01-13 09:25  carenas
 
