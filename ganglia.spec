@@ -1,5 +1,5 @@
 #
-# $Id: ganglia.spec.in 1886 2008-11-01 20:04:35Z carenas $
+# $Id: ganglia.spec.in 2258 2010-02-01 16:29:15Z d_pocock $
 #
 # ganglia.spec.  Generated from ganglia.spec.in by configure.
 #
@@ -8,19 +8,19 @@
 # build mixed architecture packages.  As a workaround, you must build
 # the RPMs using the following commandline
 #
-# % rpmbuild -ta --target noarch,i386 ganglia-3.1.2.tar.gz
+# % rpmbuild -ta --target noarch,i386 ganglia-3.1.7.tar.gz
 #
 Summary: Ganglia Distributed Monitoring System
 Name: ganglia
-Version: 3.1.2
+Version: 3.1.7
 URL: http://ganglia.info/
-Release: 1 
+Release: 1
 License: BSD
 Vendor: Ganglia Development Team <ganglia-developers@lists.sourceforge.net>
 Group: System Environment/Base
-Source: %{name}-3.1.2.tar.gz
+Source: %{name}-3.1.7.tar.gz
 Buildroot: %{_tmppath}/%{name}-%{version}-buildroot
-BuildRequires: libpng-devel, libart_lgpl-devel, gcc-c++, python-devel, libconfuse-devel
+BuildRequires: libpng-devel, libart_lgpl-devel, gcc-c++, python-devel, libconfuse-devel, pcre-devel
 %if 0%{?suse_version}
 BuildRequires:  freetype2-devel, libapr1-devel
 %if 0%{?suse_version} > 1020
@@ -32,6 +32,8 @@ BuildRequires: rrdtool, expat
 BuildRequires: rrdtool-devel, freetype-devel, apr-devel > 1
 %endif
 %define conf_dir /etc/ganglia
+%define gmond_conf gmond/gmond.conf
+%define generate_gmond_conf %(test -e %gmond_conf && echo 0 || echo 1)
 
 %description
 Ganglia is a scalable, real-time monitoring and execution environment
@@ -47,7 +49,7 @@ Obsoletes: ganglia-webfrontend < %{version}
 Provides: ganglia-webfrontend = %{version}
 # We should put rrdtool as a Requires too but rrdtool rpm support is very weak
 # so most people install from source
-#Requires: ganglia-gmetad >=  3.1.2
+#Requires: ganglia-gmetad >=  3.1.7
 Requires: php-gd
 %if 0%{?suse_version}
 %define web_prefixdir /srv/www/htdocs/ganglia
@@ -134,11 +136,11 @@ gmetad packages
 %endif
 
 %prep
-%setup -n %{name}-3.1.2
+%setup -n %{name}-3.1.7
 
 %build
+%configure --with-gmetad --enable-status --sysconfdir=%{conf_dir}
 %ifnarch noarch
-%configure --with-gmetad
 make
 %endif
 
@@ -205,14 +207,18 @@ fi
 
 %ifarch noarch
 
+%__make -C web conf.php
+%__make -C web version.php
 %__install -d -m 0755 $RPM_BUILD_ROOT/%{web_prefixdir}
 %__cp -rf web/* $RPM_BUILD_ROOT/%{web_prefixdir}
+%__rm -f $RPM_BUILD_ROOT/%{web_prefixdir}/Makefile*
 %__rm -f $RPM_BUILD_ROOT/%{web_prefixdir}/*.in
 
 %else
 
 # Create the directory structure
 %__install -d -m 0755 $RPM_BUILD_ROOT/etc/init.d
+%__install -d -m 0755 $RPM_BUILD_ROOT/etc/sysconfig
 %__install -d -m 0755 $RPM_BUILD_ROOT/var/lib/ganglia/rrds
 %__install -d -m 0755 $RPM_BUILD_ROOT%{_mandir}/man1
 %__install -d -m 0755 $RPM_BUILD_ROOT%{_mandir}/man5
@@ -225,26 +231,29 @@ fi
    %__cp -f gmond/gmond.init $RPM_BUILD_ROOT/etc/init.d/gmond
    %__cp -f gmetad/gmetad.init $RPM_BUILD_ROOT/etc/init.d/gmetad
 %endif
+%__cp -f gmetad/gmetad-default $RPM_BUILD_ROOT/etc/sysconfig/gmetad
 
 %__install -d -m 0755 $RPM_BUILD_ROOT%{conf_dir}
 %__install -d -m 0755 $RPM_BUILD_ROOT%{conf_dir}/conf.d
 %__install -d -m 0755 $RPM_BUILD_ROOT%{_libdir}/ganglia/python_modules
 
+%if %generate_gmond_conf
 # We just output the default gmond.conf from gmond using the '-t' flag
-gmond/gmond -t > $RPM_BUILD_ROOT%{conf_dir}/gmond.conf
-%__cp -f gmetad/gmetad.conf $RPM_BUILD_ROOT%{conf_dir}/gmetad.conf
+  gmond/gmond -t > $RPM_BUILD_ROOT%{conf_dir}/gmond.conf
+%else
+  %__cp -f %gmond_conf $RPM_BUILD_ROOT%{conf_dir}/gmond.conf
+%endif
+#%__cp -f gmetad/gmetad.conf $RPM_BUILD_ROOT%{conf_dir}/gmetad.conf
 %__cp -f gmond/modules/conf.d/* $RPM_BUILD_ROOT%{conf_dir}/conf.d
 
 # Copy the python metric modules and .conf files
 %__cp -f gmond/python_modules/conf.d/*.pyconf $RPM_BUILD_ROOT%{conf_dir}/conf.d/
+%{__python} -c 'import compileall; compileall.compile_dir("gmond/python_modules", 1, "/", 1)' > /dev/null
 %__cp -f gmond/python_modules/*/*.{py,pyc} $RPM_BUILD_ROOT%{_libdir}/ganglia/python_modules/
 
 # Don't install the example modules
 %__rm -f $RPM_BUILD_ROOT%{conf_dir}/conf.d/example.conf
 %__rm -f $RPM_BUILD_ROOT%{conf_dir}/conf.d/example.pyconf
-
-# Don't install the status modules
-%__rm -f $RPM_BUILD_ROOT%{conf_dir}/conf.d/modgstatus.conf
 
 # Clean up the .conf.in files
 %__rm -f $RPM_BUILD_ROOT%{conf_dir}/conf.d/*.conf.in
@@ -266,6 +275,7 @@ gmond/gmond -t > $RPM_BUILD_ROOT%{conf_dir}/gmond.conf
 %attr(0755,nobody,nobody)/var/lib/ganglia/
 %{_sbindir}/gmetad
 /etc/init.d/gmetad
+%config(noreplace) /etc/sysconfig/gmetad
 %{_mandir}/man1/gmetad.1*
 %config(noreplace) %{conf_dir}/gmetad.conf
 
@@ -282,11 +292,13 @@ gmond/gmond -t > $RPM_BUILD_ROOT%{conf_dir}/gmond.conf
 %config(noreplace) %{conf_dir}/gmond.conf
 %dir %{conf_dir}
 %dir %{conf_dir}/conf.d/
+%config(noreplace) %{conf_dir}/conf.d/modgstatus.conf
 %dir %{_libdir}/ganglia/
 %{_libdir}/ganglia/modmulticpu.so*
 %{conf_dir}/conf.d/multicpu.conf
 %{_libdir}/ganglia/modcpu.so*
 %{_libdir}/ganglia/moddisk.so*
+%{_libdir}/ganglia/modgstatus.so
 %{_libdir}/ganglia/modload.so*
 %{_libdir}/ganglia/modmem.so*
 %{_libdir}/ganglia/modnet.so*
@@ -330,6 +342,7 @@ gmond/gmond -t > $RPM_BUILD_ROOT%{conf_dir}/gmond.conf
 %{web_prefixdir}/cluster_legend.html
 %{web_prefixdir}/cluster_view.php
 %{web_prefixdir}/COPYING
+%{web_prefixdir}/eval_config.php
 %{web_prefixdir}/footer.php
 %{web_prefixdir}/functions.php
 %{web_prefixdir}/ganglia.php
@@ -341,7 +354,6 @@ gmond/gmond -t > $RPM_BUILD_ROOT%{conf_dir}/gmond.conf
 %{web_prefixdir}/header.php
 %{web_prefixdir}/host_view.php
 %{web_prefixdir}/index.php
-%{web_prefixdir}/Makefile.am
 %{web_prefixdir}/meta_view.php
 %{web_prefixdir}/node_legend.html
 %{web_prefixdir}/physical_view.php
@@ -358,6 +370,14 @@ gmond/gmond -t > $RPM_BUILD_ROOT%{conf_dir}/gmond.conf
 %__rm -rf $RPM_BUILD_ROOT
 
 %changelog
+* Sat Jan 12 2010 Carlo Marcelo Arenas Belon <carenas@sajinet.com.pe>
+- Instruct RPM to byte compile python modules at install time
+* Tue Jan 12 2010 Daniel Pocock <daniel@pocock.com.au>
+- Add eval_config.php to files list
+* Tue Jan  5 2010 Daniel Pocock <daniel@pocock.com.au>
+- Add dependency on pcre-devel
+* Thu Jul 30 2009 Daniel Pocock <daniel@pocock.com.au>
+- gstatus is now compiled and included in the RPM, but not loaded by default
 * Wed Oct 01 2008 Carlo Marcelo Arenas Belon <carenas@sajinet.com.pe>
 - Add missing defattr for gmond-modules-python
 * Sun Jul 20 2008 Carlo Marcelo Arenas Belon <carenas@sajinet.com.pe>
@@ -389,7 +409,7 @@ gmond/gmond -t > $RPM_BUILD_ROOT%{conf_dir}/gmond.conf
 - Set variable conf_dir to /etc/ganglia
 - Migrate /etc/{gmond,gmetad}.conf files to /etc/ganglia for upgrades etc.
 * Fri Nov 09 2007 Bernard Li <bernard@vanhpc.org>
-- Include .pyc files from /usr/lib64/ganglia/python_modules
+- Include .pyc files from /usr/lib/ganglia/python_modules
 * Thu Nov 08 2007 Bernard Li <bernard@vanhpc.org>
 - Clean up /etc/ganglia/conf.d/*.conf.in files
 * Wed Oct 10 2007 Bernard Li <bernard@vanhpc.org>

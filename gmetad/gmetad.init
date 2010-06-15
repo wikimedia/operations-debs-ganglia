@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: gmetad.init 156 2002-10-18 21:57:58Z sacerdoti $
+# $Id: gmetad.init 2181 2010-01-07 15:56:11Z d_pocock $
 #
 # chkconfig: 2345 20 80
 # description: gmetad startup script
@@ -7,6 +7,10 @@
 GMETAD=/usr/sbin/gmetad
 
 . /etc/rc.d/init.d/functions
+
+test -f /etc/sysconfig/gmetad && . /etc/sysconfig/gmetad
+
+export RRDCACHED_ADDRESS
 
 RETVAL=0
 

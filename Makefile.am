@@ -1,25 +1,28 @@
-# $Id: Makefile.am 1945 2009-01-13 09:25:10Z carenas $
+# $Id: Makefile.am 2232 2010-01-15 00:04:06Z d_pocock $
 #
+
+include $(top_srcdir)/ganglia.inc
+
 if BUILD_GMETAD
-GMETAD_SUBDIR = gmetad
+GMETAD_SUBDIR = gmetad web
 else
 GMETAD_SUBDIR = 
 endif
 
-EXTRA_SUBDIRS = "web contrib"
+EXTRA_SUBDIRS = "contrib solaris"
 EXTRA_DIST_FILES = 
 INCLUDES = @APR_INCLUDES@
 
-AUTOMAKE_OPTIONS = dist-bzip2 dist-tarZ dist-shar dist-zip
+AUTOMAKE_OPTIONS = dist-bzip2 dist-tarZ dist-zip
 
 GANGLIA_SUBDIRS = lib libmetrics tests $(GMETAD_SUBDIR) gmond gstat gmetric include
 SUBDIRS = $(GANGLIA_SUBDIRS)
 # Make sure that no matter the setting for --with-gmetad
 # that the gmetad directory gets distributed
-GANGLIA_SUBDIRS_DIST = lib libmetrics tests gmetad gmond gstat gmetric include
+GANGLIA_SUBDIRS_DIST = lib libmetrics tests gmetad web gmond gstat gmetric include
 DIST_SUBDIRS = $(GANGLIA_SUBDIRS_DIST) 
 
-EXTRA_DIST = README.WIN README.AIX ganglia.spec.aix ganglia.spec ganglia.pod ganglia.html mans $(EXTRA_DIST_FILES)
+EXTRA_DIST = README.WIN README.AIX ganglia.spec.aix ganglia.spec ganglia.pod ganglia.html mans ganglia-config.in $(EXTRA_DIST_FILES)
 
 ganglia.sub: ganglia.pod
 	sed -e 's/GANGLIA_VERSION/@VERSION@/' < $(srcdir)/ganglia.pod > ganglia.sub
@@ -65,4 +68,26 @@ dist-hook:
 	touch $(distdir)/Makefile.am
 	find $(distdir) -exec touch -r $(distdir)/Makefile.am {} \;
 
-bin_SCRIPTS = ganglia-config
+# _SCRIPTS causes the target to be built at build time
+# we want it done at install time
+#bin_SCRIPTS = ganglia-config
+
+ganglia-config:	ganglia-config.in $(FIXCONFIG)
+	$(FIXCONFIG) ganglia-config.in
+
+install-exec-hook:	ganglia-config
+	mkdir -p $(DESTDIR)$(bindir) && \
+	  $(INSTALL_SCRIPT) ganglia-config $(DESTDIR)$(bindir)/ganglia-config
+
+contrib/ganglia_gmond.xml:	contrib/ganglia_gmond.xml.in $(FIXCONFIG)
+	$(FIXCONFIG) contrib/ganglia_gmond.xml.in
+
+solaris/pkginfo:	solaris/pkginfo.in $(FIXCONFIG)
+	$(FIXCONFIG) solaris/pkginfo.in
+
+# Notice that some files declared in this hook never get installed anywhere
+# We use the hook to force the files to be generated, but they remain
+# within the build tree for someone to inspect or manually copy to
+# the desired location if needed
+install-data-hook:	contrib/ganglia_gmond.xml solaris/pkginfo
+

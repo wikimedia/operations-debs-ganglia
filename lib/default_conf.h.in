@@ -3,13 +3,19 @@
 
 char *default_gmond_configuration = NULL;
 
+#if NO_SETUID == 0
+#define DO_SETUID_STRING "yes"
+#else
+#define DO_SETUID_STRING "no"
+#endif
+
 #define BASE_GMOND_CONFIGURATION "\
 /* This configuration is as close to 2.5.x default behavior as possible\n\
    The values closely match ./gmond/metric.h definitions in 2.5.x */\n\
 globals {\n\
   daemonize = yes\n\
-  setuid = yes\n\
-  user = nobody\n\
+  setuid = " DO_SETUID_STRING "\n\
+  user = " SETUID_USER "\n\
   debug_level = 0\n\
   max_udp_msg_len = 1472\n\
   mute = no\n\
@@ -18,7 +24,7 @@ globals {\n\
   host_dmax = 0 /*secs */\n\
   cleanup_threshold = 300 /*secs */\n\
   gexec = no\n\
-  send_metadata_interval = 0\n\
+  send_metadata_interval = 0 /*secs */\n\
 }\n\
 \n\
 /*\n\
@@ -40,6 +46,12 @@ host {\n\
 /* Feel free to specify as many udp_send_channels as you like.  Gmond\n\
    used to only support having a single channel */\n\
 udp_send_channel {\n\
+  #bind_hostname = yes # Highly recommended, soon to be default.\n\
+                       # This option tells gmond to use a source address\n\
+                       # that resolves to the machine's hostname.  Without\n\
+                       # this, the metrics may appear to come from any\n\
+                       # interface and the DNS names associated with\n\
+                       # those IPs will be used to create the RRDs.\n\
   mcast_join = 239.2.11.71\n\
   port = 8649\n\
   ttl = 1\n\
@@ -99,7 +111,7 @@ modules {\n\
   }\n\
 }\n\
 \n\
-include ('/etc/ganglia/conf.d/*.conf')\n\
+include ('" SYSCONFDIR "/conf.d/*.conf')\n\
 \n\
 /* The old internal 2.5.x metric array has been replaced by the following\n\
    collection_group directives.  What follows is the default behavior for\n\

@@ -1,7 +1,635 @@
-2009-01-28 23:04  bnicholes
+2010-02-17 11:03  d_pocock
 
-	* [r1964] .:
-	  Tagging 3.1.2 (SVN r1963)
+	* [r2288] .:
+	  Tag 3.1.7 from r2287
+
+2010-02-17 11:01  d_pocock
+
+	* [r2287]
+	  Prepare for tagging 3.1.7
+
+2010-02-17 10:42  d_pocock
+
+	* [r2286]
+	  gmond: use per CPU count of jiffies for multicpu (backport r2116)
+
+2010-02-17 10:41  d_pocock
+
+	* [r2285]
+	  Revert r2282 (lib64 only for Redhat systems)
+
+2010-02-10 10:57  d_pocock
+
+	* [r2282]
+	  Only try lib64 for Redhat-based systems (backport r2281)
+
+2010-02-09 16:01  d_pocock
+
+	* [r2280]
+	  Use awk to escape commas in CFLAGS and LDFLAGS so that sed script
+	  will not break (backport r2279)
+
+2010-02-04 16:44  d_pocock
+
+	* [r2276]
+	  Update sed expression to permit comma in CFLAGS (backport r2275)
+
+2010-02-04 12:25  d_pocock
+
+	* [r2274]
+	  Revert to snapshot mode after tagging 3.1.6
+
+2010-02-04 12:07  d_pocock
+
+	* [r2272]
+	  Prepare for tagging 3.1.6
+
+2010-02-04 11:42  d_pocock
+
+	* [r2271]
+	  Add notes about Cygwin versions (backport r2270)
+
+2010-02-04 11:14  d_pocock
+
+	* [r2269]
+	  Update sed expression to permit comma in LDFLAGS (backport r2268)
+
+2010-02-03 19:52  knobi1
+
+	* [r2267]
+	  
+
+2010-02-03 15:55  d_pocock
+
+	* [r2266]
+	  Revised AIX init scripts for gmond and gmetad (backport r2265)
+
+2010-02-02 16:05  d_pocock
+
+	* [r2263]
+	  Update README.AIX contributed by Michael Perzl (backort r2262)
+
+2010-02-02 16:01  d_pocock
+
+	* [r2261]
+	  Improve comments in AIX code (backport r2260)
+
+2010-02-01 16:29  d_pocock
+
+	* [r2258]
+	  spec file: fix for noarch with fixconfig (backport r2257)
+
+2010-02-01 16:02  d_pocock
+
+	* [r2256]
+	  gmetad.conf is now handled by make install (backport r2255)
+
+2010-02-01 14:29  d_pocock
+
+	* [r2254]
+	  Consistent use of new AC_PROG_LIBTOOL instead of the depracated
+	  form AM_PROG_LIBTOOL (backport r2253)
+
+2010-01-28 11:51  d_pocock
+
+	* [r2252]
+	  merge AIX changes contributed and tested by Michael (r2234,
+	  r2235, r2236, r2237, r2238, r2239, r2244) from branch
+	  monitor-core-3.1-aix
+
+2010-01-19 18:32  d_pocock
+
+	* [r2243]
+	  Remove slash after DESTDIR (backport r2242)
+
+2010-01-15 00:04  d_pocock
+
+	* [r2232]
+	  Make sure all necessary templates are distributed (backport
+	  r2230)
+
+2010-01-15 00:02  d_pocock
+
+	* [r2231]
+	  Add solaris directory with pkginfo.in (partial backport r2057)
+
+2010-01-14 23:36  d_pocock
+
+	* [r2229]
+	  Fix bad application of backport
+
+2010-01-14 23:23  d_pocock
+
+	* [r2228]
+	  Fix bad application of backport
+
+2010-01-14 18:26  d_pocock
+
+	* [r2227]
+	  Configuration files and scripts are now created during the
+	  install phase rather than during configure. This allows values
+	  such as @sysconfdir@ to be used in the template configuration
+	  files. (backport r2224, r2225)
+
+2010-01-14 18:11  d_pocock
+
+	* [r2226]
+	  Partially backport r2057, some Solaris artefacts
+
+2010-01-13 19:05  d_pocock
+
+	* [r2223]
+	  Use sysconfdir for locating Python module configs (BUG16,
+	  backport r2222)
+
+2010-01-13 16:19  d_pocock
+
+	* [r2221]
+	  Check alternate locations for pcre.h (backport r2220)
+
+2010-01-13 13:11  d_pocock
+
+	* [r2219]
+	  For 3.1 series, require user to be explicit about sysconfdir
+	  (backport r2218)
+
+2010-01-12 16:43  d_pocock
+
+	* [r2217]
+	  Correctly access the global rrd_options (backport r2216)
+
+2010-01-12 15:18  d_pocock
+
+	* [r2215]
+	  Always include Python files in dist, regardless of BUILD_PYTHON
+	  setting. Delay building Python bytecode until install phase.
+	  (backport r1610, 1877, 1880)
+
+2010-01-12 12:06  d_pocock
+
+	* [r2214]
+	  Add eval_config.php to files list (backport r2213)
+
+2010-01-11 17:01  d_pocock
+
+	* [r2212]
+	  Abolish the GANGLIA_RELEASE_NAME as agreed on ganglia-developers
+	  discussion
+
+2010-01-11 16:16  d_pocock
+
+	* [r2209]
+	  Update documentation regarding options for multihomed hosts
+	  (backport r2208)
+
+2010-01-11 12:03  d_pocock
+
+	* [r2207]
+	  gmond: load metric modules before any call to setup callbacks
+	  (backport r2206)
+
+2010-01-09 17:15  d_pocock
+
+	* [r2204]
+	  libganglia: propagate interface name through creation of apr
+	  socket (BUG140, backport r2121)
+
+2010-01-08 17:25  d_pocock
+
+	* [r2203]
+	  web: only add new row if there are more metrics in section
+	  (backport r2162)
+
+2010-01-08 17:22  d_pocock
+
+	* [r2202]
+	  web: use tables instead of forced breaks for aligning metrics in
+	  host view (backport r2161)
+
+2010-01-08 17:17  d_pocock
+
+	* [r2201]
+	  gmetad: fortify write_data_to_rrd against possible overflows
+	  (backport r2159 and r2200)
+
+2010-01-08 17:09  d_pocock
+
+	* [r2199]
+	  documentation: remove references to GNU buildchain as a hard
+	  dependency (backport r2155)
+
+2010-01-08 17:06  d_pocock
+
+	* [r2198]
+	  build: check for Python.h explicitly (backport r2154)
+
+2010-01-08 17:04  d_pocock
+
+	* [r2197]
+	  libmetrics: solaris: avoid conflict with ncpus extern in old
+	  versions of <sys/cpuvar.h> (backport r2153)
+
+2010-01-08 17:03  d_pocock
+
+	* [r2196]
+	  Annotate that send_metadata_interval is in seconds (backport
+	  r2151)
+
+2010-01-08 17:01  d_pocock
+
+	* [r2195]
+	  build: remove hack to force C99 support with Sun Studio (backport
+	  r2148)
+
+2010-01-08 16:58  d_pocock
+
+	* [r2194]
+	  web: update documentation for case_sensitive_hostnames to reflect
+	  it is a bool (backport r2135)
+
+2010-01-08 16:55  d_pocock
+
+	* [r2193]
+	  documentation: contrib description for ganglia-hosts-lowercase
+	  (backport r2134)
+
+2010-01-08 15:51  d_pocock
+
+	* [r2192]
+	  libmetrics: freebsd fixes for crashes and disk statistics
+	  (BUG153) (backport r2126)
+
+2010-01-08 15:49  d_pocock
+
+	* [r2191]
+	  gmetad: workaround broken apr-1 headers depending incorrectly on
+	  off64_t (backport r2188)
+
+2010-01-08 15:47  d_pocock
+
+	* [r2190]
+	  Rewrite gmetad sleep code in various places to use apr, remove
+	  magic numbers, sleep as a percentage of the step rather than an
+	  absolute random adjustment (backport r2106, r2107, r2108)
+
+2010-01-08 14:23  carenas
+
+	* [r2187]
+	  documentation: update/improve instructions for building under
+	  cygwin
+
+2010-01-08 14:12  carenas
+
+	* [r2186]
+	  documentation: optional configuration for PCRE
+
+2010-01-07 17:47  d_pocock
+
+	* [r2185]
+	  gmond: module conf cleanup (backport r2118)
+
+2010-01-07 16:14  d_pocock
+
+	* [r2184]
+	  Create eval_config.php for doing initial evaluation of
+	  configuration options and creating parameters derived from those
+	  specified by the administrator. (backport 2065)
+
+2010-01-07 16:09  d_pocock
+
+	* [r2183]
+	  Create eval_config.php for doing initial evaluation of
+	  configuration options and creating parameters derived from those
+	  specified by the administrator. (backport 2065)
+
+2010-01-07 16:00  d_pocock
+
+	* [r2182]
+	  Move the definition of rrd_options to conf.php (backport r2064)
+
+2010-01-07 15:56  d_pocock
+
+	* [r2181]
+	  gmetad init script sources settings from /etc/sysconfig/gmetad.
+	  Include environment variables/command line options for rrdcached
+	  support, originally proposed by Bernard at
+	  http://sourceforge.net/apps/trac/ganglia/wiki/rrdcached_integration
+	  (backport r2049)
+
+2010-01-07 15:21  d_pocock
+
+	* [r2180]
+	  Bug 232: backport script: Provide script
+	  ganglia-hosts-lowercase.sh to assist in renaming directories in
+	  an existing installation.
+
+2010-01-07 15:11  d_pocock
+
+	* [r2179]
+	  Backport r2176: Abort if both bind_hostname and bind are
+	  specified. bind_hostname is now a boolean. Add bind_hostname
+	  example to default configuration.
+
+2010-01-07 15:09  d_pocock
+
+	* [r2178]
+	  Backport (r2122) documentation for bind and bind_hostname.
+
+2010-01-05 13:46  d_pocock
+
+	* [r2172]
+	  documentation: PCRE dependency
+
+2010-01-05 13:44  d_pocock
+
+	* [r2171]
+	  Backport r2150 and add section names
+
+2010-01-05 11:55  d_pocock
+
+	* [r2170]
+	  Update documentation to cover pcre support
+
+2010-01-05 11:42  d_pocock
+
+	* [r2168]
+	  Add dependency on pcre-devel to spec file
+
+2010-01-05 11:29  d_pocock
+
+	* [r2166]
+	  Make the name_match feature (and requirement for pcre) optional
+
+2010-01-04 13:50  d_pocock
+
+	* [r2163]
+	  Revert r2043 while alternative solutions are explored. Bug 231
+	  remains open.
+
+2009-12-28 20:43  d_pocock
+
+	* [r2160]
+	  Patch for PCRE support (backport r2112 and r2119)
+
+2009-12-18 12:11  d_pocock
+
+	* [r2158]
+	  Check for NULL when destroying pollset and closing sockets
+
+2009-12-13 20:38  carenas
+
+	* [r2152]
+	  status cleanup and normalization
+
+2009-12-04 07:42  carenas
+
+	* [r2138]
+	  build: clarify/update use of dist targets
+
+2009-12-04 01:57  carenas
+
+	* [r2137]
+	  build: remove ganglia release name
+
+2009-12-02 10:08  carenas
+
+	* [r2132]
+	  documentation: trivial updates for default configuration and
+	  documentation
+
+2009-12-02 07:06  carenas
+
+	* [r2131]
+	  libmetrics: dragonflybsd: fix FTBFS for >=2.4
+
+2009-11-29 23:26  carenas
+
+	* [r2123]
+	  build: update after 3.1.5 release
+
+2009-11-25 01:04  bernardli
+
+	* [r2110]
+	  Update STATUS file and configure.in in anticipation of 3.1.5
+	  release
+
+2009-11-25 00:48  bernardli
+
+	* [r2109]
+	  Revert the last change as it removed some entries from the STATUS
+	  file, also need to get the branch ready for tagging as 3.1.5.
+
+2009-10-26 12:51  d_pocock
+
+	* [r2103]
+	  Prepare to start 3.1.5 development
+
+2009-10-26 12:27  d_pocock
+
+	* [r2101]
+	  Prepare for 3.1.4 release
+
+2009-10-26 11:49  d_pocock
+
+	* [r2100]
+	  Backport 2098: Only use APR_POLLSET_THREADSAFE for Linux >= 2.6
+
+2009-10-26 11:28  d_pocock
+
+	* [r2099]
+	  Backport 2094 and 2097: tidy up help output for setuid/setgid,
+	  revert to original behavior setuid enabled by default
+
+2009-10-05 22:37  bernardli
+
+	* [r2095]
+	  - Vote on backport proposal - Add new backport proposal for
+	  set{uid,gid} - Reset snapshot=yes
+
+2009-09-18 19:27  d_pocock
+
+	* [r2092]
+	  Prepare for 3.1.3 release
+
+2009-09-18 18:51  d_pocock
+
+	* [r2091]
+	  Use CSW versions of APR and libConfuse (backport r2090)
+
+2009-09-16 15:33  bnicholes
+
+	* [r2081]
+	  Ensure that a complete XML dump is delivered before closing the
+	  send socket. Submitted by: Jerry <adawzq 126 com>
+
+2009-09-16 15:24  bnicholes
+
+	* [r2080]
+	  Fix the allow_extra_data configuration directive(BUG199)
+
+2009-09-16 14:45  d_pocock
+
+	* [r2079]
+	  Remove -O0 flag from default CFLAGS for gmetad, add to debug
+	  CFLAGS
+
+2009-08-23 08:24  carenas
+
+	* [r2060]
+	  gmond: backport typo fix for reload support
+
+2009-08-21 09:47  d_pocock
+
+	* [r2056]
+	  Fix quoting of example command line
+
+2009-08-21 09:46  d_pocock
+
+	* [r2055]
+	  Fix path to mod_multicpu.lo
+
+2009-08-21 09:37  d_pocock
+
+	* [r2053]
+	  Quoting square brackets for autoconf
+
+2009-08-18 15:12  d_pocock
+
+	* [r2048]
+	  Provide basic reload function on UNIX platforms using execve.
+	  (backport r2027, tweak for 3.1)
+
+2009-08-17 15:05  d_pocock
+
+	* [r2046]
+	  Specify default setuid/setgid parameters with configure. setgid
+	  is not implemented within gmond, but at least the parameter can
+	  be used to create an smf file. (backport r2028)
+
+2009-08-17 14:40  d_pocock
+
+	* [r2045]
+	  Provide basic reload function on UNIX platforms using execve.
+	  (backport r2027)
+
+2009-08-17 14:23  d_pocock
+
+	* [r2044]
+	  Add udp_send_channel parameters bind and bind_hostname. If
+	  bind_hostname=1, gmond will attempt to bind with an address
+	  associated with the actual hostname. (backport r2026)
+
+2009-08-17 14:17  d_pocock
+
+	* [r2043]
+	  daemonize at the last possible moment before entering main loop,
+	  so that initialisation errors result in a non-zero return status
+	  (backport r2025)
+
+2009-08-17 14:04  d_pocock
+
+	* [r2042]
+	  New metrics for status module: gmond_version and
+	  gmond_version_full (backport r2024)
+
+2009-08-17 13:58  d_pocock
+
+	* [r2041]
+	  Check return status of apr_pollset_create. Use
+	  APR_POLLSET_THREADSAFE on Linux. (backport r2023)
+
+2009-08-17 13:49  d_pocock
+
+	* [r2040]
+	  Define new configure variables REL and GANGLIA_VERSION_FULL
+	  (backport r2022)
+
+2009-08-17 13:45  d_pocock
+
+	* [r2039]
+	  Look in lib64 rather than lib for apr, confuse and expat on
+	  x86_64 Linux builds (backport r2020)
+
+2009-08-17 13:24  d_pocock
+
+	* [r2038]
+	  Set SYSCONFDIR, and use it when finding and/or generating default
+	  config file. Backport r2021, r2031. Fix bug 16.
+
+2009-08-17 11:57  d_pocock
+
+	* [r2037]
+	  Make mod_multicpu available in static builds, tested with Cygwin
+	  (backport 2019)
+
+2009-08-17 09:17  d_pocock
+
+	* [r2036]
+	  configure option to nominate additional out-of-tree modules for
+	  static linking (backport r2017)
+
+2009-08-14 16:52  d_pocock
+
+	* [r2035]
+	  Allow package builder to supply a gmond.conf of their own
+
+2009-08-14 16:19  d_pocock
+
+	* [r2033]
+	  Tweak for Solaris 8 build support, script for configuring in an
+	  environment with Sun Studio and Blastwave
+
+2009-08-10 10:59  d_pocock
+
+	* [r2016]
+	  Include gstatus module in the RPM (backport r2010)
+
+2009-08-10 10:56  d_pocock
+
+	* [r2015]
+	  Allow the gstatus module to be enabled as part of a static build
+
+2009-08-10 10:44  d_pocock
+
+	* [r2014]
+	  Bug 232: Part 2: make the hash key comparisons for hostnames
+	  non-case-sensitive. Create host directories using the lowercase
+	  version of the hostname only. Provide configuration option for
+	  maintaining legacy (broken) behavior. Provide script
+	  ganglia-hosts-lowercase.sh to assist in renaming directories in
+	  an existing installation. (backport r2005)
+
+2009-08-10 10:33  d_pocock
+
+	* [r2013]
+	  Bug 232: Part 1 of fix: Define new function hash_keycmp(),
+	  instead of using direct calls to strcmp() and memcmp(). Add a
+	  flag for making hash key comparisons case-insensitive.
+
+2009-08-10 10:19  d_pocock
+
+	* [r2012]
+	  Bug 237: Seg fault on Solaris where first CPU not in slot 0
+	  (backport r2006 and r2008 from trunk)
+
+2009-04-12 12:00  carenas
+
+	* [r1993]
+	  gmond: ensure Python.h gets included before any standard headers
+	  indicated as a requirement by Python/C API as shown in :
+	  http://docs.python.org/3.0/c-api/intro.html#include-files
+	  
+	  reported by Sergei Volkov in BUG228 to generate a broken
+	  modpython for Solaris.
+	  
+	  committed to trunk in r1992 and confirmed to solve the reported
+	  problem in Solaris 10 update 3 and 6 linking against python 2.3
+	  and 2.4; also cleaning compilation warnings in other platforms.
+
+2009-01-28 23:20  bnicholes
+
+	* [r1965]
+	  Reset after 3.1.2 tag
 
 2009-01-28 23:00  bnicholes
 

@@ -1,6 +1,6 @@
 <?php
-/* $Id: graph.php 1816 2008-09-17 09:42:40Z carenas $ */
-include_once "./conf.php";
+/* $Id: graph.php 2183 2010-01-07 16:09:55Z d_pocock $ */
+include_once "./eval_config.php";
 include_once "./get_context.php";
 include_once "./functions.php";
 
@@ -184,7 +184,7 @@ if (!array_key_exists('series', $rrdtool_graph) || !strlen($rrdtool_graph['serie
     exit();
 }
 
-$command = RRDTOOL . " graph - ";
+$command = RRDTOOL . " graph - $rrd_options ";
 
 // The order of the other arguments isn't important, except for the
 // 'extras' and 'series' values.  These two require special handling.

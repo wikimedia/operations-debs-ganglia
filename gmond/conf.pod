@@ -159,8 +159,9 @@ You can define as many B<udp_send_channel> sections as you like within
 the limitations of memory and file descriptors.  If B<gmond> is configured
 as B<mute> this section will be ignored.
 
-The B<udp_send_channel> has a total of five attributes: B<mcast_join>,
-B<mcast_if>, B<host>, B<port> and B<ttl>.
+The B<udp_send_channel> has a total of seven attributes: B<mcast_join>,
+B<mcast_if>, B<host>, B<port>, B<ttl>, B<bind> and B<bind_hostname>.
+B<bind> and B<bind_hostname> are mutually exclusive.
 
 For example, the 2.5.x version gmond would send on the following single channel
 by default...
@@ -174,9 +175,18 @@ The B<mcast_join> and B<mcast_if> attributes are optional.  When specified
 B<gmond> will create the UDP socket and join the B<mcast_join> multicast group
 and send data out the interface specified by B<mcast_if>.
 
+You can use the B<bind> attribute to bind to a particular local address to
+be used as the source for the multicast packets sent or let gmond resolve the
+default hostname if B<bind_hostname> = yes.
+
 If only a B<host> and B<port> are specified then B<gmond> will send unicast UDP
-messages to the hosts specified.  You could specify multiple unicast hosts
-for redundancy as B<gmond> will send UDP messages to all UDP channels.
+messages to the hosts specified.
+
+You could specify multiple unicast hosts for redundancy as B<gmond> will send
+UDP messages to all UDP channels.
+
+Be carefull though not to mix multicast and unicast attributes in the same
+udp_send_channel definition.
 
 For example...
 
@@ -299,9 +309,10 @@ the following attributes: B<collect_once>, B<collect_every>
 and B<time_threshold>.  A B<collection_group> must also contain one
 or more B<metric> sections.
 
-The B<metric> section has the following attributes: B<name>,
-B<value_threshold> and B<title>.  For a list of available metric 
-names, run the following command:
+The B<metric> section has the following attributes: (one of B<name> 
+or B<name_match>; B<name_match> is only permitted if pcre support is
+compiled in), B<value_threshold> and B<title>.  For a list of 
+available metric names, run the following command:
 
   % gmond -m
 
@@ -361,6 +372,29 @@ even when only a single B<value_threshold> is surpassed.
 
 In addition a user friendly title can be substituted for the metric name
 by including a B<title> within the B<metric> section.
+
+By using the B<name_match> parameter instead of B<name>, it is possible
+to use a single definition to configure multiple metrics that match a
+regular expression.  The perl compatible regular expression (pcre) syntax
+is used.  This approach is particularly useful for a series of metrics
+that may vary in number between reboots (e.g. metric names that
+are generated for each individual NIC or CPU core).
+
+Here is an example of using the B<name_match> directive to enable
+the multicpu metrics:
+
+  metric {
+    name_match = "multicpu_([a-z]+)([0-9]+)"
+    value_threshold = 1.0
+    title = "CPU-\\2 \\1"
+  }
+
+Note that in the example above, there are two matches: the alphabetical
+match matches the variations of the metric name (e.g. B<idle>, B<system>)
+while the numeric match matches the CPU core number.  The second thing
+to note is the use of substitutions within the argument to B<title>.
+
+If both B<name> and B<name_match> are specified, then B<name> is ignored.
 
 =head2 Modules
 

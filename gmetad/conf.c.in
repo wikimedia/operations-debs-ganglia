@@ -83,6 +83,7 @@ static DOTCONF_CB(cb_data_source)
    char *p, *str;
    char *endptr;
    struct sockaddr_in sa;
+   gmetad_config_t *c = (gmetad_config_t*) cmd->option->info;
 
    source_index++;
 
@@ -111,6 +112,7 @@ static DOTCONF_CB(cb_data_source)
       dslist->step = 15;
 
    debug_msg("Polling interval for %s is %u sec.", dslist->name, dslist->step);
+   c->shortest_step = dslist->step;
 
    dslist->sources = (g_inet_addr **) malloc( (cmd->arg_count-i) * sizeof(g_inet_addr *) );
    if (! dslist->sources )
@@ -228,6 +230,13 @@ static DOTCONF_CB(cb_scalable)
    return NULL;
 }
 
+static DOTCONF_CB(cb_case_sensitive_hostnames)
+{
+   gmetad_config_t *c = (gmetad_config_t*) cmd->option->info;
+   c->case_sensitive_hostnames = cmd->data.value;
+   return NULL;
+}
+
 static FUNC_ERRORHANDLER(errorhandler)
 {
    err_quit("gmetad config file error: %s\n", msg);
@@ -250,6 +259,7 @@ static configoption_t gmetad_options[] =
       {"setuid_username", ARG_STR, cb_setuid_username, &gmetad_config, 0},
       {"scalable", ARG_STR, cb_scalable, &gmetad_config, 0},
       {"RRAs", ARG_LIST, cb_RRAs, &gmetad_config, 0},
+      {"case_sensitive_hostnames", ARG_INT, cb_case_sensitive_hostnames, &gmetad_config, 0},
       LAST_OPTION
    };
 
@@ -274,6 +284,7 @@ set_defaults (gmetad_config_t *config)
    config->RRAs[2] = "RRA:AVERAGE:0.5:168:244";
    config->RRAs[3] = "RRA:AVERAGE:0.5:672:244";
    config->RRAs[4] = "RRA:AVERAGE:0.5:5760:374";
+   config->case_sensitive_hostnames = 1;
 }
 
 int
@@ -321,3 +332,4 @@ number_of_datasources ( char *config_file )
    dotconf_cleanup(configfile);
    return number_of_sources;
 }
+

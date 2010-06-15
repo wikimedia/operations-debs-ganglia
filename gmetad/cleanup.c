@@ -1,4 +1,4 @@
-/* $Id: cleanup.c 1233 2008-04-13 07:48:32Z carenas $ */
+/* $Id: cleanup.c 2190 2010-01-08 15:47:40Z d_pocock $ */
 /*
  * cleanup.c - Enforces metric/host delete time. Helps keep
  *    memory usage trim and fit by deleting expired metrics from hash.
@@ -26,11 +26,16 @@
 #include <sys/resource.h>
 #include <unistd.h>
 
+#include <apr_time.h>
+
 #include "ganglia.h"
 #include "gmetad.h"
 
 #include "conf.h"
 #include "cmdline.h"
+
+/* Interval (seconds) between cleanup runs */
+#define CLEANUP_INTERVAL 180
 
 #ifdef AIX
 extern void *h_errno_which(void);
@@ -187,7 +192,7 @@ cleanup_thread(void *arg)
 
    for (;;) {
       /* Cleanup every 3 minutes. */
-      sleep(180);
+      apr_sleep(apr_time_from_sec(CLEANUP_INTERVAL));
 
       debug_msg("Cleanup thread running...");
 
