@@ -1,3 +1,12 @@
+ganglia (3.1.7-2) unstable; urgency=low
+  
+  * Stop ganglia-monitor from changing permissions on /var/lib/ganglia
+    in postinst. Closes: #586909
+  * Switch from adduser to useradd in postinst and prerm. Closes: #620505 
+  * Include Danish debconf template. Closes: #605328
+
+ -- Stuart Teasdale <sdt@debian.org>  Thu, 07 Apr 2011 21:13:02 +0100
+
 ganglia (3.1.7-1) unstable; urgency=low
 
   * New upstream version. Closes: #584276. 
