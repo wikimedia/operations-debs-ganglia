@@ -9,10 +9,10 @@ if [ "$1" = "purge" ] ; then
         fi
    	# remove ganglia user only if gmond isn't installed
         if getent passwd ganglia >/dev/null; then
-                deluser ganglia
+                userdel ganglia
         fi
         if getent group ganglia >/dev/null; then
-                delgroup ganglia
+                groupdel ganglia
         fi
    fi
 fi

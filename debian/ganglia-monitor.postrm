@@ -9,10 +9,10 @@ if [ "$1" = "purge" ] ; then
         fi
    # Only remove ganglia user if gmetad isn't installed
         if getent passwd ganglia >/dev/null; then
-                deluser ganglia
+                userdel ganglia
         fi
         if getent group ganglia >/dev/null; then
-                delgroup ganglia
+                groupdel ganglia
         fi
     fi
 fi
