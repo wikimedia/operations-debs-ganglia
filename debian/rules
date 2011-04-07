@@ -70,6 +70,12 @@ install: build
 	
 	# Add here commands to install the package into debian/ganglia.
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
+
+        # Empty out the dependency field in our .la files
+        for file in $(CURDIR)/debian/tmp/usr/lib/*.la; do \
+                sed -i "/dependency_libs/ s/'.*'/''/" $$file ; \
+        done
+
 	# Seed the package directories
 	dh_install --sourcedir=debian/tmp
 

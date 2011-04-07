@@ -4,8 +4,9 @@ ganglia (3.1.7-2) unstable; urgency=low
     in postinst. Closes: #586909
   * Switch from adduser to useradd in postinst and prerm. Closes: #620505 
   * Include Danish debconf template. Closes: #605328
+  * Remove la files from dependency_libs. Closes: #621232 #620721
 
- -- Stuart Teasdale <sdt@debian.org>  Thu, 07 Apr 2011 21:13:02 +0100
+ -- Stuart Teasdale <sdt@debian.org>  Thu, 07 Apr 2011 21:18:40 +0100
 
 ganglia (3.1.7-1) unstable; urgency=low
 
