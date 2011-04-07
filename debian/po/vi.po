@@ -10,37 +10,42 @@ msgstr ""
 "PO-Revision-Date: 2009-09-22 23:55+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
+"Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.8\n"
 
-#: ../ganglia-webfrontend.templates:2001
 #. Type: boolean
 #. Description
+#: ../ganglia-webfrontend.templates:2001
 msgid "Automatically configure apache2?"
 msgstr "Tự động cấu hình apache2 ?"
 
-#: ../ganglia-webfrontend.templates:2001
 #. Type: boolean
 #. Description
+#: ../ganglia-webfrontend.templates:2001
 msgid ""
 "The ganglia front-end will be unavailable until a web server is configured. "
 "Automatic configuration can be performed for the Apache 2 web server."
-msgstr "Giao diện ganglia vẫn còn không sẵn sàng dùng đến khi một trình phục vụ Web được cấu hình. Có khả năng tự động cấu hình trình phục vụ Web Apache 2."
+msgstr ""
+"Giao diện ganglia vẫn còn không sẵn sàng dùng đến khi một trình phục vụ Web "
+"được cấu hình. Có khả năng tự động cấu hình trình phục vụ Web Apache 2."
 
-#: ../ganglia-webfrontend.templates:3001
 #. Type: boolean
 #. Description
+#: ../ganglia-webfrontend.templates:3001
 msgid "Restart apache2?"
 msgstr "Khởi chạy lại apache2 ?"
 
-#: ../ganglia-webfrontend.templates:3001
 #. Type: boolean
 #. Description
+#: ../ganglia-webfrontend.templates:3001
 msgid ""
 "In order to activate the new configuration, the web server needs to be "
 "restarted. If you choose not to do this automatically, you should do so "
 "manually at the first opportunity."
-msgstr "Để kích hoạt cấu hình mới, trình phục vụ Web cần được khởi chạy lại. Nếu bạn không chọn tự động làm việc này, có nên tự làm đó vào lúc sớm nhất."
+msgstr ""
+"Để kích hoạt cấu hình mới, trình phục vụ Web cần được khởi chạy lại. Nếu bạn "
+"không chọn tự động làm việc này, có nên tự làm đó vào lúc sớm nhất."

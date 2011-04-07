@@ -32,6 +32,7 @@ msgstr ""
 "PO-Revision-Date: 2009-08-02 17:16+0100\n"
 "Last-Translator: Francisco Javier Cuadrado <fcocuadrado@gmail.com>\n"
 "Language-Team: Debian l10n Spanish <debian-l10n-spanish@lists.debian.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -45,8 +46,13 @@ msgstr "¿Desea configurar automáticamente apache2?"
 #. Type: boolean
 #. Description
 #: ../ganglia-webfrontend.templates:2001
-msgid "The ganglia front-end will be unavailable until a web server is configured. Automatic configuration can be performed for the Apache 2 web server."
-msgstr "No podrá acceder a la interfaz de ganglia hasta que se configure el servidor web. Puede realizar ahora la configuración automática del servidor web Apache 2."
+msgid ""
+"The ganglia front-end will be unavailable until a web server is configured. "
+"Automatic configuration can be performed for the Apache 2 web server."
+msgstr ""
+"No podrá acceder a la interfaz de ganglia hasta que se configure el servidor "
+"web. Puede realizar ahora la configuración automática del servidor web "
+"Apache 2."
 
 #. Type: boolean
 #. Description
@@ -57,6 +63,11 @@ msgstr "¿Desea reiniciar apache2?"
 #. Type: boolean
 #. Description
 #: ../ganglia-webfrontend.templates:3001
-msgid "In order to activate the new configuration, the web server needs to be restarted. If you choose not to do this automatically, you should do so manually at the first opportunity."
-msgstr "Para activar la configuración nueva, se debe reiniciar el servidor web. Si escoge no reiniciarlo automáticamente, deberá hacerlo manualmente cuando le sea posible."
-
+msgid ""
+"In order to activate the new configuration, the web server needs to be "
+"restarted. If you choose not to do this automatically, you should do so "
+"manually at the first opportunity."
+msgstr ""
+"Para activar la configuración nueva, se debe reiniciar el servidor web. Si "
+"escoge no reiniciarlo automáticamente, deberá hacerlo manualmente cuando le "
+"sea posible."

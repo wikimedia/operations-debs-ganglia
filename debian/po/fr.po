@@ -12,6 +12,7 @@ msgstr ""
 "PO-Revision-Date: 2009-08-04 21:00+0100\n"
 "Last-Translator: Alexandre Normand <aj.normand@free.fr>\n"
 "Language-Team: French <debian-l10n-french@lists.debian.org>\n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -28,8 +29,13 @@ msgstr "Configurer apache2 automatiquement ?"
 #. Type: boolean
 #. Description
 #: ../ganglia-webfrontend.templates:2001
-msgid "The ganglia front-end will be unavailable until a web server is configured. Automatic configuration can be performed for the Apache 2 web server."
-msgstr "L'interface ganglia sera indisponible tant qu'aucun serveur web n'aura été configuré. La configuration automatique peut être effectuée pour le serveur web Apache 2."
+msgid ""
+"The ganglia front-end will be unavailable until a web server is configured. "
+"Automatic configuration can be performed for the Apache 2 web server."
+msgstr ""
+"L'interface ganglia sera indisponible tant qu'aucun serveur web n'aura été "
+"configuré. La configuration automatique peut être effectuée pour le serveur "
+"web Apache 2."
 
 #. Type: boolean
 #. Description
@@ -40,6 +46,11 @@ msgstr "Redémarrer apache2 ?"
 #. Type: boolean
 #. Description
 #: ../ganglia-webfrontend.templates:3001
-msgid "In order to activate the new configuration, the web server needs to be restarted. If you choose not to do this automatically, you should do so manually at the first opportunity."
-msgstr "Pour que la nouvelle configuration soit prise en compte, le serveur web doit être redémarré. Si vous décidez de ne pas le faire maintenant, vous devriez le faire vous-même dès que possible."
-
+msgid ""
+"In order to activate the new configuration, the web server needs to be "
+"restarted. If you choose not to do this automatically, you should do so "
+"manually at the first opportunity."
+msgstr ""
+"Pour que la nouvelle configuration soit prise en compte, le serveur web doit "
+"être redémarré. Si vous décidez de ne pas le faire maintenant, vous devriez "
+"le faire vous-même dès que possible."
