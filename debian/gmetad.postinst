@@ -8,10 +8,9 @@ fi
 
 if ! getent passwd ganglia >/dev/null; then
 	echo Adding system user: ganglia.
-	useradd --system ganglia 
+	useradd --system ganglia -g ganglia
 	usermod -c "Ganglia Monitor" 	ganglia
 	usermod -d "/var/lib/ganglia" 	ganglia
-	usermod -g "ganglia" 		ganglia
 	usermod -s "/bin/false" 	ganglia
 fi
 
