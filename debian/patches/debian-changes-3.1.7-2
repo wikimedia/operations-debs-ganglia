@@ -1,0 +1,45 @@
+Description: Upstream changes introduced in version 3.1.7-2
+ This patch has been created by dpkg-source during the package build.
+ Here's the last changelog entry, hopefully it gives details on why
+ those changes were made:
+ .
+ ganglia (3.1.7-2) unstable; urgency=low
+ .
+   * Stop ganglia-monitor from changing permissions on /var/lib/ganglia
+     in postinst. Closes: #586909
+   * Switch from adduser to useradd in postinst and prerm. Closes: #620505
+   * Include Danish debconf template. Closes: #605328
+   * Remove la files from dependency_libs. Closes: #621232 #620721
+   * Switch to dpkg-source 3.0 (quilt) format
+ .
+ The person named in the Author field signed this changelog entry.
+Author: Stuart Teasdale <sdt@debian.org>
+Bug-Debian: http://bugs.debian.org/586909
+Bug-Debian: http://bugs.debian.org/605328
+Bug-Debian: http://bugs.debian.org/620505
+Bug-Debian: http://bugs.debian.org/621232
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: http://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- ganglia-3.1.7.orig/lib/daemon_init.c
++++ ganglia-3.1.7/lib/daemon_init.c
+@@ -92,7 +92,7 @@ daemon_init (const char *pname, int faci
+ 
+    i = chdir ("/");     /* change working directory */
+ 
+-   umask (0);           /* clear our file mode creation mask */
++   umask (0002);           /* clear our file mode creation mask */
+ 
+    for (i = 0; i < MAXFD; i++)
+       close (i);

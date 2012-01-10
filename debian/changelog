@@ -1,8 +1,21 @@
-ganglia (3.1.7-3) unstable; urgency=low
+ganglia (3.1.7-2.1) unstable; urgency=low
 
-  * Fix up for useradd behaving differently from adduser. Closes: #626407
+  * Non-maintainer upload.
+  * Fix "FTBFS: aborting due to unexpected upstream changes": use
+    dh_autotools-dev_* helper tools for handling config.{guess,sub} in
+    debian/rules, make build dependency on autotools-dev versioned, remove
+    respective hunks from debian/patches/debian-changes-3.1.7-2.
+    (Closes: #651320)
+  * Now the package builds once but not twice in a row due to auto-generated
+    files; clean them in debian/rules, and remove them from
+    debian/patches/debian-changes-3.1.7-2.
+  * Fix "post-installation script returns error exit status 1" and "post
+    install script fails to add the ganglia user":
+    patch from Ubuntu / Mark Mims:
+    - Fix options on useradd in postinst. (LP: #854866)
+    (Closes: #626407, #561199)
 
- -- Stuart Teasdale <sdt@debian.org>  Wed, 11 May 2011 19:54:17 +0100
+ -- gregor herrmann <gregoa@debian.org>  Tue, 10 Jan 2012 16:55:13 +0100
 
 ganglia (3.1.7-2) unstable; urgency=low
   

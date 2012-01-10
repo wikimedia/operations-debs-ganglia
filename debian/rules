@@ -22,6 +22,7 @@ endif
 
 config.status: configure
 	dh_testdir
+	dh_autotools-dev_updateconfig
 	# Add here commands to configure the package.
 #	autoreconf
 	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
@@ -48,24 +49,14 @@ clean:
 
 	# Add here commands to clean up after the build process.
 	[ ! -f Makefile ] || $(MAKE) distclean
-	-test -r /usr/share/misc/config.sub && \
-	  rm -f config.sub config/config.sub
-	  cp -f /usr/share/misc/config.sub config.sub
-	  #cp -f /usr/share/misc/config.sub config/config.sub
-	-test -r /usr/share/misc/config.guess && \
-	  rm -f config.guess config/config.guess
-	  cp -f /usr/share/misc/config.guess config.guess
-	  #cp -f /usr/share/misc/config.guess config/config.guess
-	rm -f contrib/ganglia_gmond.xml \
-	ganglia-config \
-		gmetad/gmetad.conf \
-		gmond/gmond.solaris.init \
-		gmond/modules/conf.d/modpython.conf \
-		solaris/pkginfo \
-		web/conf.php \
-		web/version.php
-	-rm -f libtool.old	
+#	-rm -f dotconf-1.0.9/conftest.o
+#	-rm -f dotconf-1.0.9/conftest
+	-rm -f libtool.old \
+		ganglia-config contrib/ganglia_gmond.xml gmetad/gmetad.conf \
+		gmond/gmond.solaris.init gmond/modules/conf.d/modpython.conf solaris/pkginfo \
+		web/version.php web/conf.php
 	debconf-updatepo
+	dh_autotools-dev_restoreconfig
 	dh_clean
 
 install: build
