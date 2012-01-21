@@ -48,8 +48,6 @@ clean:
 
 	# Add here commands to clean up after the build process.
 	[ ! -f Makefile ] || $(MAKE) distclean
-#	-rm -f dotconf-1.0.9/conftest.o
-#	-rm -f dotconf-1.0.9/conftest
 	-test -r /usr/share/misc/config.sub && \
 	  rm -f config.sub config/config.sub
 	  cp -f /usr/share/misc/config.sub config.sub
@@ -58,6 +56,14 @@ clean:
 	  rm -f config.guess config/config.guess
 	  cp -f /usr/share/misc/config.guess config.guess
 	  #cp -f /usr/share/misc/config.guess config/config.guess
+	rm -f contrib/ganglia_gmond.xml \
+	ganglia-config \
+		gmetad/gmetad.conf \
+		gmond/gmond.solaris.init \
+		gmond/modules/conf.d/modpython.conf \
+		solaris/pkginfo \
+		web/conf.php \
+		web/version.php
 	-rm -f libtool.old	
 	debconf-updatepo
 	dh_clean
