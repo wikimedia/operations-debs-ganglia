@@ -1,4 +1,4 @@
-/* $Id: gstat.c 1398 2008-06-10 17:07:25Z bernardli $ */
+/* $Id: gstat.c 1380 2008-06-04 21:05:16Z bernardli $ */
 #if HAVE_CONFIG_H
 #include <config.h>
 #endif /* HAVE_CONFIG_H */

@@ -96,9 +96,6 @@
    and to 0 otherwise. */
 #undef HAVE_REALLOC
 
-/* Define to 1 if you have the <rpc/rpc.h> header file. */
-#undef HAVE_RPC_RPC_H
-
 /* We have a len attr in sockaddr */
 #undef HAVE_SOCKADDR_SA_LEN
 
@@ -217,6 +214,9 @@
    slash. */
 #undef LSTAT_FOLLOWS_SLASHED_SYMLINK
 
+/* MINGW */
+#undef MINGW
+
 /* NETBSD */
 #undef NETBSD
 
@@ -274,7 +274,7 @@
 /* Define to rpl_malloc if the replacement function should be used. */
 #undef malloc
 
-/* Define to `long int' if <sys/types.h> does not define. */
+/* Define to `long' if <sys/types.h> does not define. */
 #undef off_t
 
 /* Define to `int' if <sys/types.h> does not define. */

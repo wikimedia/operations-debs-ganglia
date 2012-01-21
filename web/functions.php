@@ -94,20 +94,20 @@ function cluster_sum($name, $metrics)
 }
 
 #-------------------------------------------------------------------------------
-function cluster_min($name, $metrics)
+function cluster_max($name, $metrics)
 {
-   $min = "";
+   $max = "";
 
    foreach ($metrics as $host => $val)
       {
          $v = $val[$name]['VAL'];
-         if (!is_numeric($min) or $min < $v)
+         if (!is_numeric($max) or $max < $v)
             {
-               $min = $v;
-               $minhost = $host;
+               $max = $v;
+               $maxhost = $host;
             }
       }
-   return array($min, $minhost);
+   return array($max, $maxhost);
 }
 
 #-------------------------------------------------------------------------------
@@ -176,12 +176,20 @@ function node_image ($metrics)
 {
    global $hosts_down;
 
-   $cpu_num  = $metrics["cpu_num"]['VAL'];
-   if(!$cpu_num || $cpu_num == 0)
-      {
-         $cpu_num = 1;
-      }
-   $load_one  = $metrics["load_one"]['VAL'];
+
+   # More rigorous checking if variables are set before trying to use them.
+   if ( isset($metrics['cpu_num']['VAL']) and $metrics['cpu_num']['VAL'] != 0 ) {
+		$cpu_num = $metrics['cpu_num']['VAL'];
+   } else {
+		$cpu_num = 1;
+   }
+
+   if ( isset($metrics['load_one']['VAL']) ) {
+		$load_one = $metrics['load_one']['VAL'];
+   } else {
+		$load_one = 0;
+   }
+
    $value = $load_one / $cpu_num;
 
    # Check if the host is down
@@ -225,27 +233,52 @@ function find_limits($nodes, $metricname)
 
          $rrd_dir = "$rrds/$clustername/$host";
          if (file_exists("$rrd_dir/$metricname.rrd")) {
-		$command = RRDTOOL . " graph '' $rrd_options --start $start --end $end ".
-		"DEF:limits='$rrd_dir/$metricname.rrd':'sum':AVERAGE ".
-		"PRINT:limits:MAX:%.2lf ".
-		"PRINT:limits:MIN:%.2lf";
-		exec($command, $out);
-		if(isset($out[1])) {
-         		$thismax = $out[1];
-	 	} else {
-			$thismax = NULL;
-	 	}
-	 if (!is_numeric($thismax)) continue;
-	 if ($max < $thismax) $max = $thismax;
+            $command = RRDTOOL . " graph /dev/null $rrd_options ".
+               "--start $start --end $end ".
+               "DEF:limits='$rrd_dir/$metricname.rrd':'sum':AVERAGE ".
+               "PRINT:limits:MAX:%.2lf ".
+               "PRINT:limits:MIN:%.2lf";
+            exec($command, $out);
+            if(isset($out[1])) {
+               $thismax = $out[1];
+            } else {
+               $thismax = NULL;
+            }
+            if (!is_numeric($thismax)) continue;
+            if ($max < $thismax) $max = $thismax;
 
-	 $thismin=$out[2];
-	 if (!is_numeric($thismin)) continue;
-	 if ($min > $thismin) $min = $thismin;
-	 #echo "$host: $thismin - $thismax (now $value)<br>\n";
-	 }
+            $thismin=$out[2];
+            if (!is_numeric($thismin)) continue;
+            if ($min > $thismin) $min = $thismin;
+            #echo "$host: $thismin - $thismax (now $value)<br>\n";
+         }
       }
       
       return array($min, $max);
+}
+
+#-------------------------------------------------------------------------------
+#
+# Finds the avg of the given cluster & metric from the summary rrds.
+#
+function find_avg($clustername, $hostname, $metricname)
+{
+    global $rrds, $start, $end, $rrd_options;
+    $avg = 0;
+
+    if ($hostname)
+        $sum_dir = "$rrds/$clustername/$hostname";
+    else
+        $sum_dir = "$rrds/$clustername/__SummaryInfo__";
+
+    $command = RRDTOOL . " graph /dev/null $rrd_options ".
+        "--start $start --end $end ".
+        "DEF:avg='$sum_dir/$metricname.rrd':'sum':AVERAGE ".
+        "PRINT:avg:AVERAGE:%.2lf ";
+    exec($command, $out);
+    $avg = $out[1];
+    #echo "$sum_dir: avg($metricname)=$avg<br>\n";
+    return $avg;
 }
 
 #-------------------------------------------------------------------------------
@@ -272,7 +305,7 @@ function nodebox($hostname, $verbose, $title="", $extrarow="")
    # Give memory in Gigabytes. 1GB = 2^20 bytes.
    $mem_total_gb = $m['mem_total']['VAL']/1048576;
    $load_one=$m['load_one']['VAL'];
-   $cpu_speed=$m['cpu_speed']['VAL']/1024;
+   $cpu_speed=round($m['cpu_speed']['VAL']/1000, 2);
    $cpu_num= $m['cpu_num']['VAL'];
    #
    # The nested tables are to get the formatting. Insane.
@@ -303,7 +336,7 @@ function nodebox($hostname, $verbose, $title="", $extrarow="")
       $last_heartbeat = $hostattrs[$hostname]['TN'];
       $age = $last_heartbeat > 3600 ? uptime($last_heartbeat) : 
          "${last_heartbeat}s";
-      $row2 .= "<font size=-2>Last heartbeat $age</font>";
+      $row2 .= "<font size=\"-2\">Last heartbeat $age</font>";
       $row3 = $hardware;
    }
 
@@ -461,4 +494,172 @@ function strip_domainname( $hostname ) {
     }
 }
 
+#-------------------------------------------------------------------------------
+# Read a file containing key value pairs
+function file_to_hash($filename, $sep)
+{
+  
+  $lines = file($filename, FILE_IGNORE_NEW_LINES);
+  
+  foreach ($lines as $line) 
+  {
+    list($k, $v) = explode($sep, rtrim($line));
+    $params[$k] = $v;
+  }
+
+  return $params;
+}
+
+#-------------------------------------------------------------------------------
+# Read a file containing key value pairs
+# Multiple values permitted for each key
+function file_to_hash_multi($filename, $sep)
+{
+ 
+  $lines = file($filename);
+ 
+  foreach ($lines as $line)
+  {
+    list($k, $v) = explode($sep, rtrim($line));
+    $params[$k][] = $v;
+  }
+
+  return $params;
+}
+
+#-------------------------------------------------------------------------------
+# Obtain a list of distinct values from an array of arrays
+function hash_get_distinct_values($h)
+{
+  $values = array();
+  $values_done = array();
+  foreach($h as $k => $v)
+  {
+    if($values_done[$v] != "x")
+    {
+      $values_done[$v] = "x";
+      $values[] = $v;
+    } 
+  }
+  return $values;
+}
+
+$filter_defs = array();
+
+#-------------------------------------------------------------------------------
+# Scan $filter_dir and populate $filter_defs
+function discover_filters()
+{
+  global $filter_dir;
+  global $filter_defs;
+
+  # Check whether filtering is configured or not
+  if(!isset($filter_dir))
+    return;
+
+  if(!is_dir($filter_dir))
+  {
+    error_log("discover_filters(): not a directory: $filter_dir");
+    return;
+  }
+
+  if($dh = opendir($filter_dir))
+  {
+    while(($filter_conf_filename = readdir($dh)) !== false) {
+      if(!is_dir($filter_conf_filename))
+      {
+        # Parse the file contents
+        $full_filename = "$filter_dir/$filter_conf_filename";
+        $filter_params = file_to_hash($full_filename, '=');
+        $filter_shortname = $filter_params["shortname"];
+        $filter_type = $filter_params["type"];
+        if($filter_type = "url")
+        {
+          $filter_data_url = $filter_params['url'];
+          $filter_defs[$filter_shortname] = $filter_params;
+          $filter_defs[$filter_shortname]["data"] = file_to_hash($filter_data_url, ',');
+          $filter_defs[$filter_shortname]["choices"] = hash_get_distinct_values($filter_defs[$filter_shortname]["data"]);
+        }
+      }
+    }
+    closedir($dh);
+  }
+}
+
+$filter_permit_list = NULL;
+
+#-------------------------------------------------------------------------------
+# Initialise the filter permit list, if necessary
+function filter_init()
+{
+   global $filter_dir, $filter_permit_list, $filter_defs, $choose_filter;
+
+   if(!is_null($filter_permit_list))
+   {
+      return;
+   }
+
+   if(!isset($filter_dir))
+   {
+      $filter_permit_list = FALSE;
+      return;
+   }
+
+   $filter_permit_list = array();
+   $filter_count = 0;
+
+   foreach($choose_filter as $filter_shortname => $filter_choice)
+   {
+      if($filter_choice == "")
+         continue; 
+
+      $filter_params = $filter_defs[$filter_shortname];
+      if($filter_count == 0)
+      {
+         foreach($filter_params["data"] as $key => $value)
+         {
+            if($value == $filter_choice)
+               $filter_permit_list[$key] = $key;
+         }
+      }
+      else
+      {
+         foreach($filter_permit_list as $key => $value)
+         {
+            $remove_key = TRUE;
+            if(isset($filter_params["data"][$key]))
+            {
+               if($filter_params["data"][$key] == $filter_choice)
+               {
+                  $remove_key = FALSE;
+               } 
+            }
+            if($remove_key)
+            {
+               unset($filter_permit_list[$key]);
+            }
+         }
+      }
+      $filter_count++;
+   }
+
+   if($filter_count == 0)
+      $filter_permit_list = FALSE;
+
+}
+
+#-------------------------------------------------------------------------------
+# Decide whether the given source is permitted by the filters, if any
+function filter_permit($source_name)
+{
+   global $filter_permit_list;
+
+   filter_init();
+   
+   # Handle the case where filtering is not active
+   if(!is_array($filter_permit_list))
+      return true;
+
+   return isset($filter_permit_list[$source_name]);
+}
 ?>

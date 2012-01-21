@@ -22,6 +22,7 @@ globals {\n\
   deaf = no\n\
   allow_extra_data = yes\n\
   host_dmax = 0 /*secs */\n\
+  host_tmax = 20 /*secs */\n\
   cleanup_threshold = 300 /*secs */\n\
   gexec = no\n\
   send_metadata_interval = 0 /*secs */\n\
@@ -72,6 +73,20 @@ tcp_accept_channel {\n\
 \n\
 "
 
+#define SFLOW_CONFIGURATION "\
+/* Channel to receive sFlow datagrams */\n\
+#udp_recv_channel {\n\
+#  port = 6343\n\
+#}\n\
+\n\
+/* Optional sFlow settings */\n\
+#sflow {\n\
+# udp_port = 6343\n\
+# accept_vm_metrics = no\n\
+#}\n\
+\n\
+"
+
 #define COLLECTION_GROUP_LIST "\
 /* Each metrics module that is referenced by gmond must be specified and\n\
    loaded. If the module has been statically linked with gmond, it does\n\
@@ -110,8 +125,6 @@ modules {\n\
 @modpathstart@    path = \"modsys.so\"\n\
   }\n\
 }\n\
-\n\
-include ('" SYSCONFDIR "/conf.d/*.conf')\n\
 \n\
 /* The old internal 2.5.x metric array has been replaced by the following\n\
    collection_group directives.  What follows is the default behavior for\n\
@@ -360,6 +373,8 @@ collection_group {\n\
     title = \"Maximum Disk Space Used\"\n\
   }\n\
 }\n\
+\n\
+include (\"" SYSCONFDIR "/conf.d/*.conf\")\n\
 \n\
 "
 

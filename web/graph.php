@@ -1,5 +1,5 @@
 <?php
-/* $Id: graph.php 2183 2010-01-07 16:09:55Z d_pocock $ */
+/* $Id: graph.php 2363 2010-11-26 05:34:11Z bernardli $ */
 include_once "./eval_config.php";
 include_once "./get_context.php";
 include_once "./functions.php";
@@ -73,6 +73,11 @@ switch ($context)
       exit;
 }
 
+if ($cs)
+    $start = $cs;
+if ($ce)
+    $end = $ce;
+
 # Set some standard defaults that don't need to change much
 $rrdtool_graph = array(
     'start'  => $start,
@@ -80,6 +85,14 @@ $rrdtool_graph = array(
     'width'  => $width,
     'height' => $height,
 );
+
+# automatically strip domainname from small graphs where it won't fit
+if ($size == "small") {
+    $strip_domainname = true;
+    # Let load coloring work for little reports in the host list.
+    if (! isset($subtitle) and $load_color)
+        $rrdtool_graph['color'] = "BACK#'$load_color'";
+}
 
 if ($debug) {
     error_log("Graph [$graph] in context [$context]");
@@ -151,11 +164,17 @@ switch ($context) {
         break;
 
     case 'cluster':
-        $title  = "$clustername Cluster";
+        if (preg_match('/cluster/i', $clustername))
+            $title  = $clustername;
+        else
+            $title  = "$clustername Cluster";
         break;
 
     case 'grid':
-        $title  = "$gridname Grid";
+        if (preg_match('/grid/i', $gridname))
+            $title  = $gridname;
+        else
+            $title  = "$gridname Grid";
         break;
 
     case 'host':
@@ -184,6 +203,11 @@ if (!array_key_exists('series', $rrdtool_graph) || !strlen($rrdtool_graph['serie
     exit();
 }
 
+# Make small graphs (host list) cleaner by removing the too-big
+# legend: it is displayed above on larger cluster summary graphs.
+if ($size == "small" and ! isset($subtitle))
+    $rrdtool_graph['extras'] = "-g";
+
 $command = RRDTOOL . " graph - $rrd_options ";
 
 // The order of the other arguments isn't important, except for the
@@ -209,7 +233,7 @@ foreach (array_keys ($rrdtool_graph) as $key) {
 $command .= array_key_exists('extras', $rrdtool_graph) ? ' '.$rrdtool_graph['extras'].' ' : '';
 $command .= " $rrdtool_graph[series]";
 
-//error_log("Final command:  $command");
+if ($debug) {   error_log("Final rrdtool command:  $command");   }
 
 # Did we generate a command?   Run it.
 if($command) {
@@ -224,7 +248,7 @@ if($command) {
         print htmlentities( $command );
         print "</body></html>";
     } else {
-        header ("Content-type: image/gif");
+        header ("Content-type: image/png");
         passthru($command);
     }
 }

@@ -1,4 +1,4 @@
-# $Id: Makefile.am 2232 2010-01-15 00:04:06Z d_pocock $
+# $Id: Makefile.am 2455 2011-01-25 20:11:37Z bernardli $
 #
 
 include $(top_srcdir)/ganglia.inc
@@ -9,20 +9,20 @@ else
 GMETAD_SUBDIR = 
 endif
 
-EXTRA_SUBDIRS = "contrib solaris"
+EXTRA_SUBDIRS = "gmetad-python contrib solaris"
 EXTRA_DIST_FILES = 
 INCLUDES = @APR_INCLUDES@
 
 AUTOMAKE_OPTIONS = dist-bzip2 dist-tarZ dist-zip
 
-GANGLIA_SUBDIRS = lib libmetrics tests $(GMETAD_SUBDIR) gmond gstat gmetric include
+GANGLIA_SUBDIRS = lib libmetrics tests $(GMETAD_SUBDIR) gmond gstat gmetric include mans
 SUBDIRS = $(GANGLIA_SUBDIRS)
 # Make sure that no matter the setting for --with-gmetad
 # that the gmetad directory gets distributed
-GANGLIA_SUBDIRS_DIST = lib libmetrics tests gmetad web gmond gstat gmetric include
+GANGLIA_SUBDIRS_DIST = lib libmetrics tests gmetad web gmond gstat gmetric include mans
 DIST_SUBDIRS = $(GANGLIA_SUBDIRS_DIST) 
 
-EXTRA_DIST = README.WIN README.AIX ganglia.spec.aix ganglia.spec ganglia.pod ganglia.html mans ganglia-config.in $(EXTRA_DIST_FILES)
+EXTRA_DIST = BUGS README.WIN README.AIX ganglia.spec.aix ganglia.spec ganglia.pod ganglia.html ganglia-config.in $(EXTRA_DIST_FILES)
 
 ganglia.sub: ganglia.pod
 	sed -e 's/GANGLIA_VERSION/@VERSION@/' < $(srcdir)/ganglia.pod > ganglia.sub

@@ -1,4 +1,4 @@
-/* $Id: data_thread.c 2190 2010-01-08 15:47:40Z d_pocock $ */
+/* $Id: data_thread.c 2106 2009-11-20 14:58:09Z d_pocock $ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/poll.h>
@@ -79,6 +79,10 @@ data_thread ( void *arg )
                    {
                      d->last_good_index = i;
                      break;
+                   }
+                 else
+                   {
+                     err_msg("data_thread() for [%s] failed to contact node %s", d->name, d->sources[i]->name);
                    }
                }
            }

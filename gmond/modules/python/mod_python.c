@@ -33,6 +33,7 @@
 
 #include <Python.h>
 #include <gm_metric.h>
+#include <gm_msg.h>
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -126,8 +127,8 @@ get_python_string_value(PyObject* dv, char* bfr, int len)
         snprintf(bfr, len, "%ld", v);
     }
     else if (PyString_Check(dv)) {
-        char* p = PyString_AsString(dv);
-        strncpy(bfr, p, len);
+        char* v = PyString_AsString(dv);
+        snprintf(bfr, len, "%s", v);
     }
     else if (PyFloat_Check(dv)) {
         double v = PyFloat_AsDouble(dv);
@@ -423,7 +424,7 @@ static void fill_gmi(Ganglia_25metric* gmi, py_metric_init_t* minfo)
     gmi->tmax = minfo->tmax;
     if (!strcasecmp(minfo->vtype, "string")) {
         gmi->type = GANGLIA_VALUE_STRING;
-        gmi->msg_size = UDP_HEADER_SIZE+32;
+        gmi->msg_size = UDP_HEADER_SIZE+MAX_G_STRING_SIZE;
     }
     else if (!strcasecmp(minfo->vtype, "uint")) {
         gmi->type = GANGLIA_VALUE_UNSIGNED_INT;
@@ -528,6 +529,19 @@ static PyObject* build_params_dict(cfg_t *pymodule)
     }
     return params_dict;
 }
+
+static PyObject*
+ganglia_get_debug_msg_level(PyObject *self, PyObject *args)
+{
+    return Py_BuildValue("i", get_debug_msg_level());
+}
+
+static PyMethodDef GangliaMethods[] = {
+    {"get_debug_msg_level", ganglia_get_debug_msg_level, METH_NOARGS,
+     "Return the debug level used by ganglia."},
+    {NULL, NULL, 0, NULL}
+};
+
 static int pyth_metric_init (apr_pool_t *p)
 {
     DIR *dp;
@@ -572,6 +586,7 @@ static int pyth_metric_init (apr_pool_t *p)
 
     /* Set up the python path to be able to load module from our module path */
     Py_Initialize();
+    Py_InitModule("ganglia", GangliaMethods);
 
     PyObject *sys_path = PySys_GetObject("path");
     PyObject *addpath = PyString_FromString(path);

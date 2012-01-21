@@ -1,4 +1,4 @@
-/* $Id: gmetad.c 2190 2010-01-08 15:47:40Z d_pocock $ */
+/* $Id: gmetad.c 2108 2009-11-23 15:17:38Z d_pocock $ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -14,6 +14,7 @@
 #include <apr_time.h>
 
 #include "daemon_init.h"
+#include "update_pidfile.h"
 
 #include "rrd_helpers.h"
 
@@ -152,7 +153,10 @@ sum_metrics(datum_t *key, datum_t *val, void *arg)
    if (do_sum)
       {
          tt = in_type_list(type, strlen(type));
-         if (!tt) return 0;
+         if (!tt) {
+            datum_free(hash_datum);
+            return 0;
+	 }
 
          /* We sum everything in double to properly combine integer sources
             (3.0) with float sources (3.1).  This also avoids wraparound
@@ -256,6 +260,7 @@ main ( int argc, char *argv[] )
    pthread_attr_t attr;
    int i, num_sources;
    uid_t gmetad_uid;
+   mode_t rrd_umask;
    char * gmetad_username;
    struct passwd *pw;
    char hostname[HOSTNAMESZ];
@@ -324,7 +329,8 @@ main ( int argc, char *argv[] )
    /* Debug level 1 is error output only, and no daemonizing. */
    if (!debug_level)
       {
-         daemon_init (argv[0], 0);
+         rrd_umask = c->umask;
+         daemon_init (argv[0], 0, rrd_umask);
       }
 
    if (args_info.pid_file_given)
