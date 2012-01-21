@@ -1,5 +1,5 @@
 %{
-/* $Id: xml_hash.gperf 1642 2008-08-10 02:22:04Z carenas $ */
+/* $Id: xml_hash.gperf 2619 2011-06-27 19:47:46Z vvuksan $ */
 #include <gmetad.h>
 %}
 struct xml_tag;
@@ -8,6 +8,7 @@ GANGLIA_XML, GANGLIA_XML_TAG
 VERSION, VERSION_TAG
 GRID, GRID_TAG
 NAME, NAME_TAG
+TAGS, TAGS_TAG
 AUTHORITY, AUTHORITY_TAG
 CLUSTER, CLUSTER_TAG
 LOCALTIME, LOCALTIME_TAG

@@ -1,13 +1,25 @@
 <?php
-/* $Id: index.php 2183 2010-01-07 16:09:55Z d_pocock $ */
+/* $Id: index.php 2363 2010-11-26 05:34:11Z bernardli $ */
 include_once "./eval_config.php";
 # ATD - function.php must be included before get_context.php.  It defines some needed functions.
 include_once "./functions.php";
 include_once "./get_context.php";
 include_once "./ganglia.php";
 include_once "./get_ganglia.php";
-include_once "./class.TemplatePower.inc.php";
-# Usefull for addons.
+include_once "./dwoo/dwooAutoload.php";
+
+try
+   {
+      $dwoo = new Dwoo($dwoo_compiled_dir);
+   }
+catch (Exception $e)
+   {
+   print "<H4>There was an error initializing the Dwoo PHP Templating Engine: ".
+      $e->getMessage() . "<br><br>The compile directory should be owned and writable by the apache user.</H4>";
+      exit;
+   }
+
+# Useful for addons.
 $GHOME = ".";
 
 if ($context == "meta" or $context == "control")
@@ -24,7 +36,11 @@ else if ($context == "tree")
    }
 else if ($context == "cluster" or $context == "cluster-summary")
    {
-      $title = "$clustername Cluster Report";
+      if (preg_match('/cluster/i', $clustername))
+         $title = "$clustername Report";
+      else
+         $title = "$clustername Cluster Report";
+
       include_once "./header.php";
       include_once "./cluster_view.php";
    }

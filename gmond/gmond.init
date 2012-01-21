@@ -1,10 +1,14 @@
 #!/bin/sh
-# $Id: gmond.init 180 2003-03-07 20:38:36Z sacerdoti $
+# $Id: gmond.init 1923 2008-11-25 08:48:57Z carenas $
 #
 # chkconfig: 2345 70 40
 # description: gmond startup script
 #
 GMOND=/usr/sbin/gmond
+
+# TMPDIR set to SysV IPC ramdrive to avoid include processing failures
+TMPDIR=/dev/shm
+export TMPDIR
 
 . /etc/rc.d/init.d/functions
 

@@ -22,13 +22,23 @@ function graph_metric ( &$rrdtool_graph ) {
            $summary,
            $value,
            $vlabel,
-           $strip_domainname;
+           $strip_domainname,
+           $graphreport_stats;
 
     if ($strip_domainname) {
         $hostname = strip_domainname($hostname);
     }
 
     $rrdtool_graph['height'] += 0; //no fudge needed
+    $rrdtool_graph['extras'] = '';
+    //$rrdtool_graph['extras'] .= ($graphreport_stats == true) ? ' --font LEGEND:10' : '';
+
+    if ($size == 'large') {
+       //$space1 = '           ';
+       $space1 = '\t';
+    } else {
+       $space1 = '';
+    }
 
     switch ($context) {
 
@@ -99,20 +109,47 @@ function graph_metric ( &$rrdtool_graph ) {
         $rrdtool_graph['lower-limit'] = $min;
 
     if ($vlabel) {
-        // We should set $vlabel, even if it isn't used for spacing
-        // and alignment reasons.  This is mostly for aesthetics
+        // We should set $vlabel **even if it isn't used** for spacing
+        // and alignment reasons.  This is mostly for aesthetics.
         $temp_vlabel = trim($vlabel);
         $rrdtool_graph['vertical-label'] = strlen($temp_vlabel)
                    ?  $temp_vlabel
                    :  ' ';
     } else {
-        $rrdtool_graph['vertical-label'] = ' ';
+        $rrdtool_graph['vertical-label'] = $metricname;
     }
 
+    if ($size == 'small') {
+        $eol1 = '\\n';
+        $eol2 = '\\l';
+    } else if ($size == 'large') {
+        $eol1 = '';
+        $eol2 = '';
+    } else if ($size == 'medium' || $size == 'default') {
+        $eol1 = '\\n';
+        $eol2 = '';
+    }
     //# the actual graph...
-    $series  = "DEF:'sum'='$rrd_dir/$metricname.rrd:sum':AVERAGE ";
-    $series .= "AREA:'sum'#$default_metric_color:'$subtitle_one'";
-    $series .= ":STACK: COMMENT:'$subtitle_two'";
+    $series  = "DEF:'sum'='$rrd_dir/$metricname.rrd:sum':AVERAGE "
+             . "AREA:'sum'#$default_metric_color:'$subtitle_one${eol1}'";
+
+    if ($graphreport_stats == false) {
+        $series .= ":STACK: COMMENT:'$subtitle_two\\l'";
+    }
+    $series .= " ";
+
+
+    if($graphreport_stats == true) {
+        $series .= "CDEF:sum_pos=sum,0,INF,LIMIT "
+                . "VDEF:sum_last=sum_pos,LAST "
+                . "VDEF:sum_min=sum_pos,MINIMUM "
+                . "VDEF:sum_avg=sum_pos,AVERAGE "
+                . "VDEF:sum_max=sum_pos,MAXIMUM "
+                . "GPRINT:'sum_last':'${space1}Now\:%7.2lf%s' "
+                . "GPRINT:'sum_min':'${space1}Min\:%7.2lf%s${eol2}' "
+                . "GPRINT:'sum_avg':'${space1}Avg\:%7.2lf%s' "
+                . "GPRINT:'sum_max':'${space1}Max\:%7.2lf%s\\l' ";
+    }
 
     if ($jobstart) {
         $series .= "VRULE:$jobstart#$jobstart_color ";
@@ -121,7 +158,6 @@ function graph_metric ( &$rrdtool_graph ) {
     $rrdtool_graph['series'] = $series;
 
     return $rrdtool_graph;
-
 }
 
 ?>

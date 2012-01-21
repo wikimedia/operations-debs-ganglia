@@ -1,5 +1,5 @@
 <?php
-# $Id: conf.php.in 2194 2010-01-08 16:58:25Z d_pocock $
+# $Id: conf.php.in 2334 2010-09-08 22:29:27Z bernardli $
 #
 # Gmetad-webfrontend version. Used to check for updates.
 #
@@ -21,6 +21,13 @@ $template_name = "default";
 $gmetad_root = "@varstatedir@/ganglia";
 $rrds = "$gmetad_root/rrds";
 
+# Where Dwoo (PHP templating engine) store compiled templates
+$dwoo_compiled_dir = "$gmetad_root/dwoo";
+
+# Where to find filter configuration files, if not set filtering
+# will be disabled
+#$filter_dir = "$gmetad_root/filters";
+
 # Leave this alone if rrdtool is installed in $gmetad_root,
 # otherwise, change it if it is installed elsewhere (like /usr/bin)
 define("RRDTOOL", "/usr/bin/rrdtool");
@@ -35,6 +42,9 @@ $rrdcached_socket = "";
 
 # Location for modular-graph files.
 $graphdir='./graph.d';
+
+# Display statistical values on RRD graphs; i.e.: average, min, max
+$graphreport_stats = true;
 
 #
 # If you want to grab data from a different ganglia source specify it here.

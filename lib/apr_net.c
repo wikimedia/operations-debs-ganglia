@@ -331,8 +331,8 @@ mcast_emit_on_if( apr_pool_t *context, apr_socket_t *sock, const char *mcast_cha
   return APR_SUCCESS;
 }
 
-static apr_status_t
-mcast_join( apr_pool_t *context, apr_socket_t *sock, char *mcast_channel, apr_port_t port, char *ifname )
+apr_status_t
+join_mcast( apr_pool_t *context, apr_socket_t *sock, char *mcast_channel, apr_port_t port, char *ifname )
 {
   apr_status_t status;
   int rval;
@@ -454,13 +454,13 @@ create_mcast_server(apr_pool_t *context, int32_t family, char *mcast_ip, apr_por
     {
       /* for(each interface)
        * {
-       *   mcast_join(...);
+       *   join_mcast(...);
        * }
        */
     }
   else
     {
-      status = mcast_join(context,  socket, mcast_ip, port, interface );
+      status = join_mcast(context,  socket, mcast_ip, port, interface );
     }
 
   return status == APR_SUCCESS? socket: NULL;

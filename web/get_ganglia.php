@@ -1,5 +1,5 @@
 <?php
-# $Id: get_ganglia.php 589 2005-10-10 07:42:26Z knobi1 $
+# $Id: get_ganglia.php 2327 2010-09-03 20:54:07Z bernardli $
 # Retrieves and parses the XML output from gmond. Results stored
 # in global variables: $clusters, $hosts, $hosts_down, $metrics.
 # Assumes you have already called get_context.php.
@@ -20,7 +20,7 @@ if (!count($grid) and !count($cluster))
    }
 
 # If we only have one cluster source, suppress MetaCluster output.
-if (count($grid) == 2 and $context=="meta")
+if (count($grid) <= 2 and $context=="meta")
    {
       # Lets look for one cluster (the other is our grid).
       foreach($grid as $source)

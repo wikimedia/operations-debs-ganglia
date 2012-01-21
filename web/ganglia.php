@@ -1,5 +1,5 @@
 <?php
-/* $Id: ganglia.php 1817 2008-09-17 10:03:15Z carenas $ */
+/* $Id: ganglia.php 2363 2010-11-26 05:34:11Z bernardli $ */
 #
 # Parses ganglia XML tree.
 #
@@ -33,7 +33,6 @@ $metrics = array();
 $version = array();
 
 # The web frontend version, from conf.php.
-#$version["webfrontend"] = "$majorversion.$minorversion.$microversion";
 $version["webfrontend"] = "$ganglia_version";
 
 # Get rrdtool version
@@ -99,7 +98,7 @@ function start_meta ($parser, $tagname, $attrs)
             break;
 
          case "METRICS":
-            $metricname = $attrs['NAME'];
+            $metricname = rawurlencode($attrs['NAME']);
             $metrics[$sourcename][$metricname] = $attrs;
             break;
 
@@ -164,7 +163,7 @@ function start_cluster ($parser, $tagname, $attrs)
             break;
 
          case "METRIC":
-            $metricname = $attrs['NAME'];
+            $metricname = rawurlencode($attrs['NAME']);
             $metrics[$hostname][$metricname] = $attrs;
             break;
 
@@ -231,7 +230,7 @@ function start_host ($parser, $tagname, $attrs)
             break;
 
          case "METRIC":
-            $metricname = $attrs['NAME'];
+            $metricname = rawurlencode($attrs['NAME']);
             $metrics[$metricname] = $attrs;
             break;
 
