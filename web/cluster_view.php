@@ -1,297 +1,174 @@
 <?php
-/* $Id: cluster_view.php 2534 2011-03-19 00:16:00Z bernardli $ */
 $tpl = new Dwoo_Template_File( template("cluster_view.tpl") );
 $data = new Dwoo_Data();
+$data->assign("php_gd", 
+              (function_exists('imagegif') or function_exists('imagepng')));
 $data->assign("extra", template("cluster_extra.tpl"));
 
-$data->assign("images","./templates/$template_name/images");
+$data->assign("images","./templates/${conf['template_name']}/images");
 
-$cpu_num = !$showhosts ? $metrics["cpu_num"]['SUM'] : cluster_sum("cpu_num", $metrics);
-$load_one_sum = !$showhosts ? $metrics["load_one"]['SUM'] : cluster_sum("load_one", $metrics);
-$load_five_sum = !$showhosts ? $metrics["load_five"]['SUM'] : cluster_sum("load_five", $metrics);
-$load_fifteen_sum = !$showhosts ? $metrics["load_fifteen"]['SUM'] : cluster_sum("load_fifteen", $metrics);
+$data->assign("user_may_edit", 
+              checkAccess( $clustername, GangliaAcl::EDIT, $conf ) );
+$data->assign("graph_engine", $conf['graph_engine']);
+
 #
 # Correct handling of *_report metrics
 #
 if (!$showhosts) {
-  if(array_key_exists($metricname, $metrics))
-     $units = $metrics[$metricname]['UNITS'];
-  }
-else {
-  if(array_key_exists($metricname, $metrics[key($metrics)]))
+  if (array_key_exists($metricname, $metrics))
+    $units = $metrics[$metricname]['UNITS'];
+} else {
+  if (array_key_exists($metricname, $metrics[key($metrics)]))
      if (isset($metrics[key($metrics)][$metricname]['UNITS']))
-        $units = $metrics[key($metrics)][$metricname]['UNITS'];
+       $units = $metrics[key($metrics)][$metricname]['UNITS'];
      else
         $units = '';
-  }
+}
 
-if(isset($cluster['HOSTS_UP'])) {
-    $data->assign("num_nodes", intval($cluster['HOSTS_UP']));
-} else {
-    $data->assign("num_nodes", 0);
-}
-if(isset($cluster['HOSTS_DOWN'])) {
-    $data->assign("num_dead_nodes", intval($cluster['HOSTS_DOWN']));
-} else {
-    $data->assign("num_dead_nodes", 0);
-}
-$data->assign("cpu_num", $cpu_num);
 $data->assign("localtime", date("Y-m-d H:i", $cluster['LOCALTIME']));
 
-if (!$cpu_num) $cpu_num = 1;
-$cluster_load15 = sprintf("%.0f", ((double) $load_fifteen_sum / $cpu_num) * 100);
-$cluster_load5 = sprintf("%.0f", ((double) $load_five_sum / $cpu_num) * 100);
-$cluster_load1 = sprintf("%.0f", ((double) $load_one_sum / $cpu_num) * 100);
-$data->assign("cluster_load", "$cluster_load15%, $cluster_load5%, $cluster_load1%");
+get_cluster_overview($showhosts, 
+		     $metrics,
+		     $cluster,
+		     $range, 
+		     $clustername, 
+		     $data);
 
-$avg_cpu_num = find_avg($clustername, "", "cpu_num");
-if ($avg_cpu_num == 0) $avg_cpu_num = 1;
-$cluster_util = sprintf("%.0f", ((double) find_avg($clustername, "", "load_one") / $avg_cpu_num ) * 100);
-$data->assign("cluster_util", "$cluster_util%");
-
-$cluster_url=rawurlencode($clustername);
-
+$cluster_url = rawurlencode($clustername);
 
 $data->assign("cluster", $clustername);
-#
-# Summary graphs
-#
+
 $graph_args = "c=$cluster_url&amp;$get_metric_string&amp;st=$cluster[LOCALTIME]";
-$data->assign("graph_args", $graph_args);
-if (!isset($optional_graphs))
-  $optional_graphs = array();
-$optional_graphs_data = array();
-foreach ($optional_graphs as $g) {
-  $optional_graphs_data[$g]['name'] = $g;
-  $optional_graphs_data[$g]['graph_args'] = $graph_args;
-}
-$data->assign('optional_graphs_data', $optional_graphs_data);
+
+get_cluster_optional_reports($conf, 
+			     $clustername, 
+			     $graph_args,
+			     $data);
 
 #
 # Correctly handle *_report cases and blank (" ") units
 #
 if (isset($units)) {
+  $vlabel = $units;
   if ($units == " ")
     $units = "";
   else
     $units=$units ? "($units)" : "";
-}
-else {
+} else {
   $units = "";
 }
 $data->assign("metric","$metricname $units");
+$data->assign("metric_name","$metricname");
 $data->assign("sort", $sort);
 $data->assign("range", $range);
 
 $showhosts_levels = array(
-   2 => array('checked'=>'', 'name'=>'Auto'),
-   1 => array('checked'=>'', 'name'=>'Same'),
+   1 => array('checked'=>'', 'name'=>'Auto'),
+   2 => array('checked'=>'', 'name'=>'Same'),
    0 => array('checked'=>'', 'name'=>'None'),
 );
 $showhosts_levels[$showhosts]['checked'] = 'checked';
 $data->assign("showhosts_levels", $showhosts_levels);
 
-$sorted_hosts = array();
-$down_hosts = array();
-$percent_hosts = array();
-if ($showhosts)
-   {
-      foreach ($hosts_up as $host => $val)
-         {
-               if ( isset($metrics[$host]["cpu_num"]['VAL']) and $metrics[$host]["cpu_num"]['VAL'] != 0 ){
-               $cpus = $metrics[$host]["cpu_num"]['VAL'];
-            } else {
-               $cpus = 1;
-            }
-            if ( isset($metrics[$host]["load_one"]['VAL']) ){
-               $load_one = $metrics[$host]["load_one"]['VAL'];
-            } else {
-               $load_one = 0;
-            }
-            $load = ((float) $load_one)/$cpus;
-            $host_load[$host] = $load;
-            if(isset($percent_hosts[load_color($load)])) { 
-                $percent_hosts[load_color($load)] += 1;
-            } else {
-                $percent_hosts[load_color($load)] = 1;
-            }
-            if ($metricname=="load_one")
-               $sorted_hosts[$host] = $load;
-            else if (isset($metrics[$host][$metricname]))
-               $sorted_hosts[$host] = $metrics[$host][$metricname]['VAL'];
-            else
-               $sorted_hosts[$host] = "";
-         }
-         
-      foreach ($hosts_down as $host => $val)
-         {
-            $load = -1.0;
-            $down_hosts[$host] = $load;
-            if(isset($percent_hosts[load_color($load)])) {
-                $percent_hosts[load_color($load)] += 1;
-            } else {
-                $percent_hosts[load_color($load)] = 1;
-            }
-         }
-      
-      # Show pie chart of loads
-      $pie_args = "title=" . rawurlencode("Cluster Load Percentages");
-      $pie_args .= "&amp;size=250x150";
-      foreach($load_colors as $name=>$color)
-         {
-            if (!array_key_exists($color, $percent_hosts))
-               continue;
-            $n = $percent_hosts[$color];
-            $name_url = rawurlencode($name);
-            $pie_args .= "&$name_url=$n,$color";
-         }
-      $data->assign("pie_args", $pie_args);
+if ($showhosts) {
+  $data->assign("columns_size_dropdown", 1);
+  $data->assign("cols_menu", $cols_menu);
+  $data->assign("size_menu", $size_menu);
+}
 
-      # Host columns menu defined in header.php
-      $data->assign("columns_size_dropdown", 1);
-      $data->assign("cols_menu", $cols_menu);
-      $data->assign("size_menu", $size_menu);
-      $data->assign("node_legend", 1);
-   }
-else
-   {
-      # Show pie chart of hosts up/down
-      $pie_args = "title=" . rawurlencode("Host Status");
-      $pie_args .= "&amp;size=250x150";
-      $up_color = $load_colors["25-50"];
-      $down_color = $load_colors["down"];
-      $pie_args .= "&amp;Up=$cluster[HOSTS_UP],$up_color";
-      $pie_args .= "&amp;Down=$cluster[HOSTS_DOWN],$down_color";
-      $data->assign("pie_args", $pie_args);
-   }
+if (!(isset($conf['heatmaps_enabled']) and $conf['heatmaps_enabled'] == 1))
+  get_cluster_load_pie($showhosts, 
+		       $hosts_up, 
+		       $hosts_down, 
+		       $user, 
+		       $conf,
+		       $metrics, 
+		       $cluster,
+		       $name,
+		       $data);
 
-# No reason to go on if we have no up hosts.
+get_host_metric_graphs($showhosts, 
+                       $hosts_up, 
+                       $hosts_down, 
+                       $user, 
+                       $conf,
+                       $metrics, 
+                       $metricname,
+                       $sort,
+                       $clustername,
+                       $get_metric_string,
+                       $cluster,
+                       $always_timestamp,
+                       $reports[$metricname],
+                       $clustergraphsize,
+                       $range,
+                       $cs,
+                       $ce,
+                       $vlabel,
+		       $data);
+
+// No reason to go on if we have no up hosts.
 if (!is_array($hosts_up) or !$showhosts) {
-   $dwoo->output($tpl, $data);
-   return;
+  $dwoo->output($tpl, $data);
+  return;
 }
 
-switch ($sort)
-{
-   case "descending":
-      arsort($sorted_hosts);
-      break;
-   case "by name":
-      uksort($sorted_hosts, "strnatcmp");
-      break;
-   default:
-   case "ascending":
-      asort($sorted_hosts);
-      break;
+///////////////////////////////////////////////////////////////////////////////
+// Creates a heatmap
+///////////////////////////////////////////////////////////////////////////////
+if (isset($conf['heatmaps_enabled']) and $conf['heatmaps_enabled'] == 1) {
+  foreach ($hosts_up as $host => $val) {
+    // If host_regex is defined
+    if (isset($user['host_regex']) && 
+        ! preg_match("/" .$user['host_regex'] . "/", $host))
+      continue;
+    
+    $load = get_load($host, $metrics);
+    $host_load[$host] = $load;
+  }
+
+  $num_hosts = count($host_load);
+
+  $matrix = ceil(sqrt($num_hosts));
+
+  $xindex = 0;
+  $yindex = 0;
+
+  foreach ($host_load as $key => $value) {
+    if ($xindex >= $matrix) {
+      $string_array[] = "[" . join(",", $matrix_array[$yindex]) . "]";
+      $yindex++;
+      $xindex = 0;
+    }
+
+    $matrix_array[$yindex][$xindex] = $value;
+    $xindex++;
+  }
+
+  $string_array[] = "[" . join(",", $matrix_array[$yindex]) . "]";
+
+  $conf['heatmap_size'] = 200;
+
+  $heatmap = join(",", $string_array);
+
+  $data->assign("heatmap", $heatmap);
+  $data->assign("heatmap_size", floor($conf['heatmap_size'] / $matrix));
+
 }
 
-$sorted_hosts = array_merge($down_hosts, $sorted_hosts);
+///////////////////////////////////////////////////////////////////////////////
+// Show stacked graphs
+///////////////////////////////////////////////////////////////////////////////
+if (isset($conf['show_stacked_graphs']) and 
+    $conf['show_stacked_graphs'] == 1  and 
+    ! preg_match("/_report$/", $metricname)) {
+      $stacked_args = "m=$metricname&c=$cluster_url&r=$range&st=$cluster[LOCALTIME]";
+      if ( isset($user['host_regex']) )
+        $stacked_args .= "&host_regex=" .  $user['host_regex'];
+      $data->assign( "stacked_graph_args", $stacked_args );
 
-# First pass to find the max value in all graphs for this
-# metric. The $start,$end variables comes from get_context.php, 
-# included in index.php.
-list($min, $max) = find_limits($sorted_hosts, $metricname);
+}
 
-# Second pass to output the graphs or metrics.
-$i = 1;
 
-foreach ( $sorted_hosts as $host => $value )
-   {
-      $host_url = rawurlencode($host);
-
-      $host_link="\"?c=$cluster_url&amp;h=$host_url&amp;$get_metric_string\"";
-      $textval = "";
-
-      #echo "$host: $value, ";
-
-      if (isset($hosts_down[$host]) and $hosts_down[$host])
-         {
-            $last_heartbeat = $cluster['LOCALTIME'] - $hosts_down[$host]['REPORTED'];
-            $age = $last_heartbeat > 3600 ? uptime($last_heartbeat) : "${last_heartbeat}s";
-
-            $class = "down";
-            $textval = "down <br>&nbsp;<font size=\"-2\">Last heartbeat $age ago</font>";
-         }
-      else
-         {
-            if(isset($metrics[$host][$metricname]))
-                $val = $metrics[$host][$metricname];
-            else
-                $val = NULL;
-            $class = "metric";
-
-            if ($val['TYPE']=="timestamp" or 
-                (isset($always_timestamp[$metricname]) and
-                 $always_timestamp[$metricname]))
-               {
-                  $textval = date("r", $val['VAL']);
-               }
-            elseif ($val['TYPE']=="string" or $val['SLOPE']=="zero" or
-                    (isset($always_constant[$metricname]) and
-                    $always_constant[$metricname] or
-                    ($max_graphs > 0 and $i > $max_graphs and $hostcols != 0)))
-               {
-                  if (isset($reports[$metricname]) and $reports[$metricname])
-                     // No "current" values available for reports
-                     $textval = "N/A";
-                  else
-                     $textval = "$val[VAL]";
-                     if (isset($val['UNITS']))
-                        $textval .= " $val[UNITS]";
-               }
-         }
-
-      $size = isset($clustergraphsize) ? $clustergraphsize : 'small';
-
-      if ($hostcols == 0) # enforce small size in multi-host report
-         $size = 'small';
-
-      $graphargs = "z=$size&amp;c=$cluster_url&amp;h=$host_url";
-
-      if (isset($host_load[$host])) {
-         $load_color = load_color($host_load[$host]);
-         $graphargs .= "&amp;l=$load_color&amp;v=$val[VAL]";
-      }
-      $graphargs .= "&amp;r=$range&amp;su=1&amp;st=$cluster[LOCALTIME]";
-      if ($cs)
-         $graphargs .= "&amp;cs=" . rawurlencode($cs);
-      if ($ce)
-         $graphargs .= "&amp;ce=" . rawurlencode($ce);
-
-      if ($showhosts == 1)
-         $graphargs .= "&amp;x=$max&amp;n=$min";
-
-      if ($textval)
-         {
-            $cell="<td class=$class>".
-               "<b><a href=$host_link>$host</a></b><br>".
-               "<i>$metricname:</i> <b>$textval</b></td>";
-         }
-      else
-         {
-            $cell="<td><a href=$host_link><img src=\"./graph.php?";
-            $cell .= (isset($reports[$metricname]) and $reports[$metricname])
-               ? "g=$metricname" : "m=$metricname";
-            $cell .= "&amp;$graphargs\" alt=\"$host\" border=0></a></td>";
-         }
-
-      if ($hostcols == 0) {
-         $pre = "<td><a href=$host_link><img src=\"./graph.php?g=";
-         $post = "&amp;$graphargs\" alt=\"$host\" border=0></a></td>";
-         $cell .= $pre . "load_report" . $post;
-         $cell .= $pre . "mem_report" . $post;
-         $cell .= $pre . "cpu_report" . $post;
-         $cell .= $pre . "network_report" . $post;
-      }
-
-      $sorted_list[$host]["metric_image"] = $cell;
-      if (! ($i++ % $hostcols) ) {
-         $sorted_list[$host]["br"] = "</tr><tr>";
-      } else {
-         $sorted_list[$host]["br"] = "";
-      }
-   }
-
-$data->assign("sorted_list", $sorted_list);
 $dwoo->output($tpl, $data);
 ?>

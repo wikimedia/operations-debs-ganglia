@@ -60,7 +60,7 @@ static cfg_opt_t globals_opts[] = {
   CFG_BOOL("mute", 0, CFGF_NONE),
   CFG_BOOL("deaf", 0, CFGF_NONE),
   CFG_BOOL("allow_extra_data", 1, CFGF_NONE),
-  CFG_INT("host_dmax", 0, CFGF_NONE),
+  CFG_INT("host_dmax", 86400, CFGF_NONE),
   CFG_INT("host_tmax", 20, CFGF_NONE),
   CFG_INT("cleanup_threshold", 300, CFGF_NONE),
   CFG_BOOL("gexec", 0, CFGF_NONE),
@@ -164,7 +164,13 @@ static cfg_opt_t metric_modules_opts[] = {
 #ifdef SFLOW
 static cfg_opt_t sflow_opts[] = {
   CFG_INT("udp_port", 6343, CFGF_NONE ),
-  CFG_BOOL("accept_vm_metrics", 0, CFGF_NONE ),
+  CFG_BOOL("accept_vm_metrics", 1, CFGF_NONE ),
+  CFG_BOOL("accept_http_metrics", 1, CFGF_NONE ),
+  CFG_BOOL("multiple_http_instances", 0, CFGF_NONE ),
+  CFG_BOOL("accept_memcache_metrics", 1, CFGF_NONE ),
+  CFG_BOOL("multiple_memcache_instances", 0, CFGF_NONE ),
+  CFG_BOOL("accept_jvm_metrics", 1, CFGF_NONE ),
+  CFG_BOOL("multiple_jvm_instances", 0, CFGF_NONE ),
   CFG_END()
 };
 #endif
@@ -510,12 +516,6 @@ Ganglia_metadata_send_real( Ganglia_metric gmetric, Ganglia_udp_send_channels se
 }
 
 int
-Ganglia_value_send( Ganglia_metric gmetric, Ganglia_udp_send_channels send_channels )
-{
-  return Ganglia_value_send_real( gmetric, send_channels, NULL );
-}
-
-int
 Ganglia_value_send_real( Ganglia_metric gmetric, Ganglia_udp_send_channels send_channels, char *override_string )
 {
   int len, i;
@@ -575,6 +575,12 @@ Ganglia_value_send_real( Ganglia_metric gmetric, Ganglia_udp_send_channels send_
   len = xdr_getpos(&x); 
   /* Send the encoded data along...*/
   return Ganglia_udp_send_message( send_channels, gmetricmsg, len);
+}
+
+int
+Ganglia_value_send( Ganglia_metric gmetric, Ganglia_udp_send_channels send_channels )
+{
+  return Ganglia_value_send_real( gmetric, send_channels, NULL );
 }
 
 int

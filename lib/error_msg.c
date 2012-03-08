@@ -1,7 +1,6 @@
 /**
  * @file error_msg.c Error Handling Functions
  */
-/* $Id: error_msg.c 2143 2009-12-06 03:24:40Z carenas $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

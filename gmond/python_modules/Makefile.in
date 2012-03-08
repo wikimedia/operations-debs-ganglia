@@ -190,8 +190,8 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 varstatedir = @varstatedir@
-DIST_SUBDIRS = disk example network
-EXTRA_DIST = ./conf.d/*.pyconf
+DIST_SUBDIRS = db disk example memcached network process xen
+EXTRA_DIST = ./conf.d/*.pyconf ./conf.d/*.pyconf.disabled
 all: all-recursive
 
 .SUFFIXES:
@@ -204,9 +204,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  gmond/python_modules/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  gmond/python_modules/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  gmond/python_modules/Makefile
+	  $(AUTOMAKE) --foreign  gmond/python_modules/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

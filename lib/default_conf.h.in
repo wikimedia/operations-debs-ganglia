@@ -21,7 +21,7 @@ globals {\n\
   mute = no\n\
   deaf = no\n\
   allow_extra_data = yes\n\
-  host_dmax = 0 /*secs */\n\
+  host_dmax = 86400 /*secs. Expires (removes from web interface) hosts in 1 day */\n\
   host_tmax = 20 /*secs */\n\
   cleanup_threshold = 300 /*secs */\n\
   gexec = no\n\
@@ -82,7 +82,13 @@ tcp_accept_channel {\n\
 /* Optional sFlow settings */\n\
 #sflow {\n\
 # udp_port = 6343\n\
-# accept_vm_metrics = no\n\
+# accept_vm_metrics = yes\n\
+# accept_jvm_metrics = yes\n\
+# multiple_jvm_instances = no\n\
+# accept_http_metrics = yes\n\
+# multiple_http_instances = no\n\
+# accept_memcache_metrics = yes\n\
+# multiple_memcache_instances = no\n\
 #}\n\
 \n\
 "

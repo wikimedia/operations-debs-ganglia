@@ -242,9 +242,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/ganglia.inc $(am__co
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  gmetad/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  gmetad/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  gmetad/Makefile
+	  $(AUTOMAKE) --foreign  gmetad/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

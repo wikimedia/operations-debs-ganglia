@@ -1,5 +1,4 @@
 /*
- * $Id: inetaddr.c 399 2004-11-18 21:42:46Z massie $
  * This code was originally written by the authors below but
  * I rewrote it and took out all the glib dependencies.
  *

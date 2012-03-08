@@ -588,12 +588,7 @@ setup_listen_channels_pollset( int reset )
   if(!reset)
     {
       if((udp_recv_sockets = (apr_socket_t **)apr_pcalloc(global_context, sizeof(apr_socket_t *) * (num_udp_recv_channels + 1))) == NULL)
-        {
-          char apr_err[512];
-          apr_strerror(status, apr_err, 511);
-          err_msg("apr_pcalloc failed: %s", apr_err);
-          exit(1);
-        }
+        err_quit("unable to allocate UDP listening sockets");
     }
 
   /* Process all the udp_recv_channels */
@@ -692,13 +687,8 @@ setup_listen_channels_pollset( int reset )
         }
     }
 
-  if((tcp_sockets = (apr_socket_t **)apr_pcalloc(global_context, sizeof(apr_socket_t *) * (num_tcp_accept_channels + 1))) == NULL)
-      {
-        char apr_err[512];
-        apr_strerror(status, apr_err, 511);
-        err_msg("apr_pcalloc failed: %s", apr_err);
-        exit(1);
-      }
+  if ((tcp_sockets = (apr_socket_t **)apr_pcalloc(global_context, sizeof(apr_socket_t *) * (num_tcp_accept_channels + 1))) == NULL)
+    err_quit("Unable to allocate TCP listening sockets");
 
   /* Process all the tcp_accept_channels */ 
   for(i=0; i< num_tcp_accept_channels; i++)
@@ -768,6 +758,28 @@ setup_listen_channels_pollset( int reset )
          }
     }
 }
+
+void sanitize_metric_name(char *metric_name)
+{
+    if (metric_name == NULL) return;
+    if (strlen(metric_name) < 1) return;
+    char *p = metric_name;
+    while (p < (metric_name + strlen(metric_name))) {
+        if (
+               !(*p >= 'A' && *p <= 'Z')
+            && !(*p >= 'a' && *p <= 'z')
+            && !(*p >= '0' && *p <= '9')
+            && (*p != '_')
+            && (*p != '-')
+            && (*p != '.')
+            && (*p != '\0')
+           ) {
+            *p = '_';
+        }
+        p++;
+    }
+}
+
 
 static void
 get_metric_names (Ganglia_metric_id *metric_id, char **metricName, char **realName)
@@ -1034,6 +1046,7 @@ void
 Ganglia_metadata_save( Ganglia_host *host, Ganglia_metadata_msg *message )
 {
     /* Search for the Ganglia_metadata in the Ganglia_host */
+    sanitize_metric_name(message->Ganglia_metadata_msg_u.gfull.metric_id.name);
     Ganglia_metadata *metric = 
         (Ganglia_metadata *)apr_hash_get(host->metrics, 
                                          message->Ganglia_metadata_msg_u.gfull.metric_id.name,
@@ -1336,6 +1349,7 @@ process_udp_recv_channel(const apr_pollfd_t *desc, apr_time_t now)
       ret = xdr_Ganglia_metadata_msg(&x, &fmsg);
       if (ret)
           hostdata = Ganglia_host_get(remoteip, remotesa, &(fmsg.Ganglia_metadata_msg_u.grequest.metric_id));
+      sanitize_metric_name(fmsg.Ganglia_metadata_msg_u.grequest.metric_id.name);
       if(!ret || !hostdata)
         {
           ganglia_scoreboard_inc(PKTS_RECVD_FAILED);
@@ -1352,6 +1366,7 @@ process_udp_recv_channel(const apr_pollfd_t *desc, apr_time_t now)
       ret = xdr_Ganglia_metadata_msg(&x, &fmsg);
       if (ret)
           hostdata = Ganglia_host_get(remoteip, remotesa, &(fmsg.Ganglia_metadata_msg_u.gfull.metric_id));
+      sanitize_metric_name(fmsg.Ganglia_metadata_msg_u.gfull.metric_id.name);
       if(!ret || !hostdata)
         {
           ganglia_scoreboard_inc(PKTS_RECVD_FAILED);
@@ -1374,6 +1389,7 @@ process_udp_recv_channel(const apr_pollfd_t *desc, apr_time_t now)
       ret = xdr_Ganglia_value_msg(&x, &vmsg);
       if (ret)
           hostdata = Ganglia_host_get(remoteip, remotesa, &(vmsg.Ganglia_value_msg_u.gstr.metric_id));
+      sanitize_metric_name(vmsg.Ganglia_value_msg_u.gstr.metric_id.name);
       if(!ret || !hostdata)
         {
           ganglia_scoreboard_inc(PKTS_RECVD_FAILED);

@@ -239,9 +239,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/ganglia.inc $(am__co
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  gmond/modules/python/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  gmond/modules/python/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  gmond/modules/python/Makefile
+	  $(AUTOMAKE) --foreign  gmond/modules/python/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

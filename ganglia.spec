@@ -1,5 +1,4 @@
 #
-# $Id: ganglia.spec.in 2636 2011-07-08 01:11:45Z rufustfirefly $
 #
 # @configure_input@
 #
@@ -9,13 +8,13 @@
 # (ex: i386, i686, x86_64) when calling rpmbuild as shown by the following
 # command line aimed at 80386 or higher CPUs :
 #
-# % rpmbuild -ta --target noarch,i386 ganglia-3.2.0.tar.gz
+# % rpmbuild -ta --target noarch,i386 ganglia-3.3.1.tar.gz
 #
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Summary: Ganglia Distributed Monitoring System
 Name: ganglia
-Version: 3.2.0
+Version: 3.3.1
 URL: http://ganglia.info/
 # The Release macro value is set in configure.in, please update it there.
 Release: 1
@@ -24,7 +23,7 @@ Vendor: Ganglia Development Team <ganglia-developers@lists.sourceforge.net>
 Group: System Environment/Base
 Source: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}-%{version}-buildroot
-BuildRequires: libpng-devel, libart_lgpl-devel, gcc-c++, python-devel, libconfuse-devel, make, pcre-devel, autoconf, automake, subversion, libtool, libxslt
+BuildRequires: libpng-devel, libart_lgpl-devel, gcc-c++, python-devel, libconfuse-devel, make, pcre-devel, autoconf, automake, libtool, pkgconfig
 %if 0%{?suse_version}
 BuildRequires:  freetype2-devel, libapr1-devel
 %if 0%{?suse_version} > 1020
@@ -53,8 +52,8 @@ Obsoletes: ganglia-webfrontend < %{version}
 Provides: ganglia-webfrontend = %{version}
 # We should put rrdtool as a Requires too but rrdtool rpm support is very weak
 # so most people install from source
-#Requires: ganglia-gmetad >=  3.2.0
-Requires: php >= 5, php-gd
+#Requires: ganglia-gmetad >=  3.3.1
+Requires: php >= 5, php-gd, php-xml
 %if 0%{?suse_version}
 %define web_prefixdir /srv/www/htdocs/ganglia
 %else
@@ -87,30 +86,30 @@ well-defined XML format.
 This gmetad daemon aggregates monitoring data from several clusters
 to form a monitoring grid. It also keeps metric history using rrdtool.
 
-%package gmetad-python
-Summary: Ganglia Meta daemon in Python http://ganglia.sourceforge.net/
-Group: System Environment/Base
-Requires: python-rrdtool
-Obsoletes: ganglia-monitor-core-gmetad < %{version}
-Obsoletes: ganglia-monitor-core < %{version}
-Provides: ganglia-monitor-core-gmetad = %{version}
-Provides: ganglia-monitor-core = %{version}
-Conflicts: ganglia-gmetad
+#%package gmetad-python
+#Summary: Ganglia Meta daemon in Python http://ganglia.sourceforge.net/
+#Group: System Environment/Base
+#Requires: python-rrdtool
+#Obsoletes: ganglia-monitor-core-gmetad < %{version}
+#Obsoletes: ganglia-monitor-core < %{version}
+#Provides: ganglia-monitor-core-gmetad = %{version}
+#Provides: ganglia-monitor-core = %{version}
+#Conflicts: ganglia-gmetad
 
-%description gmetad-python
-Ganglia is a scalable, real-time monitoring and execution environment
-with all execution requests and statistics expressed in an open
-well-defined XML format.
+#%description gmetad-python
+#Ganglia is a scalable, real-time monitoring and execution environment
+#with all execution requests and statistics expressed in an open
+#well-defined XML format.
 
-This gmetad daemon aggregates monitoring data from several clusters
-to form a monitoring grid. It also keeps metric history using rrdtool.
+#This gmetad daemon aggregates monitoring data from several clusters
+#to form a monitoring grid. It also keeps metric history using rrdtool.
 
-gmetad-python is a re-write of the original gmetad code (written in C)
-with pluggable interface.  The RRD files, both the metric RRDs and summary
-RRDs are being written by RRD plugins rather than directly from gmetad.
-This provides the ability to plug in new metric storage modules to support
-other types of storage mechanisms other than RRD and also the ability to
-plug in any type of gmetad-level analysis.
+#gmetad-python is a re-write of the original gmetad code (written in C)
+#with pluggable interface.  The RRD files, both the metric RRDs and summary
+#RRDs are being written by RRD plugins rather than directly from gmetad.
+#This provides the ability to plug in new metric storage modules to support
+#other types of storage mechanisms other than RRD and also the ability to
+#plug in any type of gmetad-level analysis.
 
 %package gmond
 Summary: Ganglia Monitor daemon http://ganglia.sourceforge.net/
@@ -173,8 +172,8 @@ gmetad packages
 %ifnarch noarch
 make
 %endif
-cd gmetad-python
-%{__python} setup.py build
+#cd gmetad-python
+#%{__python} setup.py build
 
 %pre
 
@@ -187,8 +186,8 @@ if [ -e /etc/gmetad.conf ]; then
   %__mv /etc/gmetad.conf %{conf_dir}
 fi
 
-%post gmetad-python
-/sbin/chkconfig --add gmetad-python
+#%post gmetad-python
+#/sbin/chkconfig --add gmetad-python
 
 %post gmond
 /sbin/chkconfig --add gmond
@@ -241,12 +240,12 @@ then
    /sbin/chkconfig --del gmetad
 fi
 
-%preun gmetad-python
-if [ "$1" = 0 ]
-then
-   /etc/init.d/gmetad-python stop
-   /sbin/chkconfig --del gmetad-python
-fi
+#%preun gmetad-python
+#if [ "$1" = 0 ]
+#then
+#   /etc/init.d/gmetad-python stop
+#   /sbin/chkconfig --del gmetad-python
+#fi
 
 %preun gmond
 if [ "$1" = 0 ]
@@ -267,13 +266,16 @@ fi
 
 %ifarch noarch
 
-%__make -C web install
-%__install -d -m 0755 $RPM_BUILD_ROOT/%{web_prefixdir}
-%__cp -rf web/* $RPM_BUILD_ROOT/%{web_prefixdir}
-%__rm -f $RPM_BUILD_ROOT/%{web_prefixdir}/Makefile*
-%__rm -f $RPM_BUILD_ROOT/%{web_prefixdir}/*.in
-%__install -d -m 0755 $RPM_BUILD_ROOT/var/lib/ganglia/filters
+%__make -C web 
+%__install -d -m 0755 $RPM_BUILD_ROOT%{web_prefixdir}
+%__cp -rf web/* $RPM_BUILD_ROOT%{web_prefixdir}
+%__rm -f $RPM_BUILD_ROOT%{web_prefixdir}/Makefile*
+%__rm -f $RPM_BUILD_ROOT%{web_prefixdir}/*.in
 %__install -d -m 0755 $RPM_BUILD_ROOT/var/lib/ganglia/dwoo
+%__install -d -m 0755 $RPM_BUILD_ROOT/var/lib/ganglia/conf
+%__install -d -m 0755 $RPM_BUILD_ROOT/var/lib/ganglia/dwoo/cache
+%__install -d -m 0755 $RPM_BUILD_ROOT/var/lib/ganglia/dwoo/compiled
+%__cp -f web/conf/*.json $RPM_BUILD_ROOT/var/lib/ganglia/conf
 
 %else
 
@@ -286,13 +288,13 @@ fi
 %if 0%{?suse_version}
    %__cp -f gmond/gmond.init.SuSE $RPM_BUILD_ROOT/etc/init.d/gmond
    %__cp -f gmetad/gmetad.init.SuSE $RPM_BUILD_ROOT/etc/init.d/gmetad
-   sed -e 's/sbin\/gmetad/sbin\/gmetad.py/' gmetad/gmetad.init.SuSE > $RPM_BUILD_ROOT/etc/init.d/gmetad-python
-   chmod +x $RPM_BUILD_ROOT/etc/init.d/gmetad-python
+   #sed -e 's/sbin\/gmetad/sbin\/gmetad.py/' gmetad/gmetad.init.SuSE > $RPM_BUILD_ROOT/etc/init.d/gmetad-python
+   #chmod +x $RPM_BUILD_ROOT/etc/init.d/gmetad-python
 %else
    %__cp -f gmond/gmond.init $RPM_BUILD_ROOT/etc/init.d/gmond
    %__cp -f gmetad/gmetad.init $RPM_BUILD_ROOT/etc/init.d/gmetad
-   sed -e 's/sbin\/gmetad/sbin\/gmetad.py/' gmetad/gmetad.init > $RPM_BUILD_ROOT/etc/init.d/gmetad-python
-   chmod +x $RPM_BUILD_ROOT/etc/init.d/gmetad-python
+   #sed -e 's/sbin\/gmetad/sbin\/gmetad.py/' gmetad/gmetad.init > $RPM_BUILD_ROOT/etc/init.d/gmetad-python
+   #chmod +x $RPM_BUILD_ROOT/etc/init.d/gmetad-python
 %endif
 %__cp -f gmetad/gmetad-default $RPM_BUILD_ROOT/etc/sysconfig/gmetad
 
@@ -310,7 +312,7 @@ fi
 %__cp -f gmond/modules/conf.d/* $RPM_BUILD_ROOT%{conf_dir}/conf.d
 
 # Copy the python metric modules and .conf files
-%__cp -f gmond/python_modules/conf.d/*.pyconf $RPM_BUILD_ROOT%{conf_dir}/conf.d/
+%__cp -f gmond/python_modules/conf.d/*.pyconf* $RPM_BUILD_ROOT%{conf_dir}/conf.d/
 %{__python} -c 'import compileall; compileall.compile_dir("gmond/python_modules", 1, "/", 1)' > /dev/null
 %{__python} -O -c 'import compileall; compileall.compile_dir("gmond/python_modules", 1, "/", 1)' > /dev/null
 %__cp -f gmond/python_modules/*/*.{py,pyc,pyo} $RPM_BUILD_ROOT%{_libdir}/ganglia/python_modules/
@@ -324,19 +326,19 @@ fi
 %__rm -f $RPM_BUILD_ROOT%{conf_dir}/conf.d/*.conf.in
 
 # Disable the diskusage module until it is configured properly
-%__mv $RPM_BUILD_ROOT%{conf_dir}/conf.d/diskusage.pyconf $RPM_BUILD_ROOT%{conf_dir}/conf.d/diskusage.pyconf.off
+%__mv $RPM_BUILD_ROOT%{conf_dir}/conf.d/diskusage.pyconf $RPM_BUILD_ROOT%{conf_dir}/conf.d/diskusage.pyconf.disabled
 
 %__make DESTDIR=$RPM_BUILD_ROOT install
 %__make -C gmond gmond.conf.5
 
 # gmetad-python
-cd gmetad-python
-%{__python} setup.py install --prefix=/usr --skip-build --install-scripts=%{_sbindir} --root=$RPM_BUILD_ROOT
-%{__python} -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_libdir}/ganglia/python_modules/gmetad"'", 1, "/", 1)' > /dev/null
-%{__python} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_libdir}/ganglia/python_modules/gmetad"'", 1, "/", 1)' > /dev/null
-%{__python} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{python_sitelib}/Gmetad"'", 1, "/", 1)' > /dev/null
-%{__python} -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_sbindir}"'", 1, "/", 1)' > /dev/null
-%{__python} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_sbindir}"'", 1, "/", 1)' > /dev/null
+#cd gmetad-python
+#%{__python} setup.py install --prefix=/usr --skip-build --install-scripts=%{_sbindir} --root=$RPM_BUILD_ROOT
+#%{__python} -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_libdir}/ganglia/python_modules/gmetad"'", 1, "/", 1)' > /dev/null
+#%{__python} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_libdir}/ganglia/python_modules/gmetad"'", 1, "/", 1)' > /dev/null
+#%{__python} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{python_sitelib}/Gmetad"'", 1, "/", 1)' > /dev/null
+#%{__python} -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_sbindir}"'", 1, "/", 1)' > /dev/null
+#%{__python} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_sbindir}"'", 1, "/", 1)' > /dev/null
 
 %endif
 
@@ -348,19 +350,19 @@ cd gmetad-python
 %{_sbindir}/gmetad
 /etc/init.d/gmetad
 %config(noreplace) /etc/sysconfig/gmetad
-%{_mandir}/man1/gmetad.1*
+%{_mandir}/man1/gmetad*1*
 %config(noreplace) %{conf_dir}/gmetad.conf
 
-%files gmetad-python
-%defattr(-,root,root)
-%{_sbindir}/gmetad.py*
-/etc/init.d/gmetad-python
-%config(noreplace) %{conf_dir}/gmetad-python.conf
-%{python_sitelib}/*
-%dir %{_libdir}/ganglia
-%dir %{_libdir}/ganglia/python_modules
-%{_libdir}/ganglia/python_modules/gmetad*
-%{_mandir}/man1/gmetad.py.1*
+#%files gmetad-python
+#%defattr(-,root,root)
+#%{_sbindir}/gmetad.py*
+#/etc/init.d/gmetad-python
+#%config(noreplace) %{conf_dir}/gmetad-python.conf
+#%{python_sitelib}/*
+#%dir %{_libdir}/ganglia
+#%dir %{_libdir}/ganglia/python_modules
+#%{_libdir}/ganglia/python_modules/gmetad*
+#%{_mandir}/man1/gmetad.py.1*
 
 %files gmond
 %defattr(-,root,root)
@@ -417,39 +419,13 @@ cd gmetad-python
 
 %files web
 %defattr(-,root,root)
-%attr(0755,nobody,nobody)/var/lib/ganglia/filters
 %attr(0755,apache,apache)/var/lib/ganglia/dwoo
+%attr(0755,apache,apache)/var/lib/ganglia/dwoo/compiled
+%attr(0755,apache,apache)/var/lib/ganglia/dwoo/cache
 %dir %{web_prefixdir}/
 %dir %{web_prefixdir}/dwoo
-%config(noreplace) %{web_prefixdir}/conf.php
-%{web_prefixdir}/AUTHORS
-%{web_prefixdir}/auth.php
-%{web_prefixdir}/calendar.php
-%{web_prefixdir}/cluster_legend.html
-%{web_prefixdir}/cluster_view.php
-%{web_prefixdir}/COPYING
-%{web_prefixdir}/eval_config.php
-%{web_prefixdir}/footer.php
-%{web_prefixdir}/functions.php
-%{web_prefixdir}/ganglia.php
-%{web_prefixdir}/get_context.php
-%{web_prefixdir}/get_ganglia.php
-%{web_prefixdir}/graph.d
-%{web_prefixdir}/graph.php
-%{web_prefixdir}/grid_tree.php
-%{web_prefixdir}/header.php
-%{web_prefixdir}/host_view.php
-%{web_prefixdir}/index.php
-%{web_prefixdir}/meta_view.php
-%{web_prefixdir}/node_legend.html
-%{web_prefixdir}/physical_view.php
-%{web_prefixdir}/pie.php
-%{web_prefixdir}/private_clusters
-%{web_prefixdir}/show_node.php
-%{web_prefixdir}/styles.css
-%{web_prefixdir}/templates
-%{web_prefixdir}/version.php
-%{web_prefixdir}/dwoo/*
+/var/lib/ganglia/conf
+%{web_prefixdir}/*
 
 %endif
 
@@ -457,6 +433,8 @@ cd gmetad-python
 %__rm -rf $RPM_BUILD_ROOT
 
 %changelog
+* Thu Mar 31 2011 Bernard Li <bernard@vanhpc.org>
+- Allow file permissions for gmetric and gstat to be automatically set
 * Thu Mar 31 2011 Bernard Li <bernard@vanhpc.org>
 - Allow file permissions for gmetric and gstat to be automatically set
 * Wed Jan 26 2011 Bernard Li <bernard@vanhpc.org>

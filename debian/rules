@@ -22,8 +22,11 @@ endif
 
 config.status: configure
 	dh_testdir
+	# Just in case, make sure changelog exists
+	touch ChangeLog
 	# Add here commands to configure the package.
-#	autoreconf
+	./bootstrap
+	chmod +x configure libmetrics/configure
 	./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
 		--prefix=/usr --mandir=\$${prefix}/share/man \
 		--libdir=\$${prefix}/lib \
@@ -31,6 +34,7 @@ config.status: configure
 		--infodir=\$${prefix}/share/info --enable-shared \
 		--with-gmetad  
 build: build-stamp
+	make -C web
 
 build-stamp:  config.status
 	dh_testdir
@@ -79,11 +83,22 @@ install: build
 	# Seed the package directories
 	dh_install --sourcedir=debian/tmp
 
+	# Install the python modules
+	mkdir -p debian/ganglia-monitor-python/etc/ganglia/conf.d/
+	mkdir -p debian/ganglia-monitor-python/usr/lib/ganglia/python_modules/
+	cp debian/modpython.conf debian/ganglia-monitor-python/etc/ganglia/conf.d/
+	cp gmond/python_modules/*/*.pyconf* \
+		debian/ganglia-monitor-python/etc/ganglia/conf.d/
+	cp gmond/python_modules/*/*.py \
+		debian/ganglia-monitor-python/usr/lib/ganglia/python_modules/
+
 #Install webfrontend
-	      cp -a web/*.php web/*.css web/templates web/graph.d \
-                 debian/ganglia-webfrontend/usr/share/ganglia-webfrontend
-	      cp web/private_clusters debian/apache.conf \
+	$(MAKE) -C web install APACHE_USER=www-data DESTDIR=$(CURDIR)/debian/ganglia-webfrontend/usr/share/ganglia-webfrontend
+	mkdir -p debian/ganglia-webfrontend/etc/apache2/conf.d/
+	cp -f web/debian/apache.conf \
 		 debian/ganglia-webfrontend/etc/ganglia-webfrontend
+	cp -f web/debian/conf_debian.php \
+		 debian/ganglia-webfrontend/usr/share/ganglia-webfrontend/conf.php
 
 # Build architecture-independent files here.
 binary-indep: build install

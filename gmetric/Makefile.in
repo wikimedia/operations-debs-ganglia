@@ -236,9 +236,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/ganglia.inc $(am__co
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  gmetric/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  gmetric/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  gmetric/Makefile
+	  $(AUTOMAKE) --foreign  gmetric/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

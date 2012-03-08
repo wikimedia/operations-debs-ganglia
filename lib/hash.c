@@ -1,4 +1,3 @@
-/* $Id: hash.c 2004 2009-07-27 11:13:54Z d_pocock $ */
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>

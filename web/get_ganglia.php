@@ -1,14 +1,14 @@
 <?php
-# $Id: get_ganglia.php 2327 2010-09-03 20:54:07Z bernardli $
+#
 # Retrieves and parses the XML output from gmond. Results stored
 # in global variables: $clusters, $hosts, $hosts_down, $metrics.
 # Assumes you have already called get_context.php.
 #
 
-if (! Gmetad($ganglia_ip, $ganglia_port) )
+if (! Gmetad($conf['ganglia_ip'], $conf['ganglia_port']) )
    {
       print "<H4>There was an error collecting ganglia data ".
-         "($ganglia_ip:$ganglia_port): $error</H4>\n";
+         "(${conf['ganglia_ip']}:${conf['ganglia_port']}): $error</H4>\n";
       exit;
    }
 
@@ -29,7 +29,7 @@ if (count($grid) <= 2 and $context=="meta")
                $standalone = 1;
                $context = "cluster";
                # Need to refresh data with new context.
-               Gmetad($ganglia_ip, $ganglia_port);
+               Gmetad($conf['ganglia_ip'], $conf['ganglia_port']);
                $clustername = $source['NAME'];
             }
    }

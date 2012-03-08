@@ -266,9 +266,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  gmond/modules/cpu/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  gmond/modules/cpu/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  gmond/modules/cpu/Makefile
+	  $(AUTOMAKE) --foreign  gmond/modules/cpu/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

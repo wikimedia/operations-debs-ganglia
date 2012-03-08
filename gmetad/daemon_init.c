@@ -1,7 +1,6 @@
 /**
  * @file daemon_init.c Functions for standalone daemons
  */ 
-/* $Id: daemon_init.c 1991 2009-04-06 09:27:24Z carenas $ */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>

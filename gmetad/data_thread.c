@@ -1,4 +1,3 @@
-/* $Id: data_thread.c 2106 2009-11-20 14:58:09Z d_pocock $ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/poll.h>

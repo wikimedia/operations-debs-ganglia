@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: gmetad.init 2049 2009-08-20 10:51:31Z d_pocock $
 #
 # chkconfig: 2345 20 80
 # description: gmetad startup script

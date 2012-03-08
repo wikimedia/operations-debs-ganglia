@@ -1,4 +1,3 @@
-/* $Id: g25_config.c 2028 2009-08-12 12:21:08Z d_pocock $ */
 #include <stdio.h>
 #include <dotconf.h>
 #include "ganglia_priv.h"

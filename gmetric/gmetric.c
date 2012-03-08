@@ -40,7 +40,7 @@ main( int argc, char *argv[] )
   gmond_config = Ganglia_gmond_config_create( args_info.conf_arg, !args_info.conf_given);
 
   /* deal with spoof overrides */
-  cfg_t *globals = (cfg_t*) cfg_getsec( gmond_config, "globals" );
+  cfg_t *globals = (cfg_t*) cfg_getsec( (cfg_t *)gmond_config, "globals" );
   char *override_hostname = cfg_getstr( globals, "override_hostname" );
   char *override_ip = cfg_getstr( globals, "override_ip" );
 
@@ -108,6 +108,8 @@ main( int argc, char *argv[] )
     }
   if(args_info.heartbeat_given)
       Ganglia_metadata_add(gmetric, SPOOF_HEARTBEAT, "yes");
+  if(args_info.cluster_given)
+      Ganglia_metadata_add(gmetric, "CLUSTER", args_info.cluster_arg);
   if(args_info.group_given)
       Ganglia_metadata_add(gmetric, "GROUP", args_info.group_arg);
   if(args_info.desc_given)

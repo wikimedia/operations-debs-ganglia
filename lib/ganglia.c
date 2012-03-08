@@ -1,7 +1,6 @@
 /**
  * @file gexec_funcs.c Functions to support gexec, gstat et al
  */
-/* $Id: ganglia.c 1380 2008-06-04 21:05:16Z bernardli $ */
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -69,7 +68,7 @@ start (void *data, const char *el, const char **attr)
             }
 
          strcpy(cluster->host->ip, attr[3]);
-         cluster->host->last_reported = atol(attr[5]);
+         cluster->host->last_reported = atol(attr[7]);
 
          if( abs(cluster->localtime - cluster->host->last_reported) < GEXEC_TIMEOUT )
             {
