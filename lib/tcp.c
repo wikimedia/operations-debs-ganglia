@@ -1,5 +1,4 @@
 /*
- * $Id: tcp.c 1237 2008-04-13 09:18:00Z carenas $
  * This code was originally written by the authors below but 
  * I rewrote it and took out all the glib dependencies. 
  *

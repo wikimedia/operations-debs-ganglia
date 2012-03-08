@@ -1,20 +1,12 @@
 <?php
-/* $Id: meta_view.php 2363 2010-11-26 05:34:11Z bernardli $ */
 $tpl = new Dwoo_Template_File( template("meta_view.tpl") );
 $data = new Dwoo_Data();
 
 discover_filters();
-
 if ( !empty($filter_defs) ) {
    $data->assign("filters", $filter_defs);
    $data->assign("choose_filter", $choose_filter);
-}
-
-# Find the private clusters.  But no one is emabarrassed in the
-# control room (public only!). 
-if ( $context != "control" ) {
-   $private=embarrassed();
-}
+ }
 
 $source_names = array_keys($grid);
 
@@ -151,7 +143,7 @@ foreach ( $sorted_sources as $source => $val )
 
       # I dont like this either, but we need to have private clusters because some
       # users are skittish about publishing the load info.
-      if (!isset($private[$source]) or !$private[$source]) 
+      if(checkAccess($source, GangliaAcl::VIEW, $conf)) 
          {
             $sources[$source]["alt_view"] = "<FONT SIZE=\"-2\">$alt_url</FONT>";
             $sources[$source]["public"] = 1;
@@ -185,14 +177,14 @@ $data->assign("sources", $sources);
 $snap_rows = array();
 
 # Show load images.
-if ($show_meta_snapshot=="yes") {
+if ($conf['show_meta_snapshot']=="yes") {
    $data->assign("show_snapshot", 1);
    $data->assign("self", "$self $meta_designator");
 
    foreach ($sorted_sources as $c=>$value) {
       if ($c==$self) continue;
       if ($c=="AAAAA.$self") continue;  # SORT HACK; see above
-      if (isset($private[$c]) and $private[$c]) {
+      if (! checkAccess($c, GangliaAcl::VIEW, $conf)) {
          $Private[$c] = template("images/cluster_private.jpg");
          continue;
       }

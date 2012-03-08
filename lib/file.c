@@ -1,7 +1,6 @@
 /**
  * @file file.c Some file functions
  */
-/* $Id: file.c 2495 2011-02-28 02:33:27Z carenas $ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

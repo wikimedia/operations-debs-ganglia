@@ -14,7 +14,6 @@
 
 @SET_MAKE@
 
-# $Id: Makefile.am 2455 2011-01-25 20:11:37Z bernardli $
 #
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -46,8 +45,8 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/gmetad-python/gmetad-python.conf.in \
 	$(top_srcdir)/gmetad-python/plugins/rrd_plugin.py.in \
 	$(top_srcdir)/gmetad-python/setup.py.in \
-	$(top_srcdir)/scripts/fixconfig.in AUTHORS COPYING ChangeLog \
-	INSTALL NEWS build/config.guess build/config.sub build/depcomp \
+	$(top_srcdir)/scripts/fixconfig.in AUTHORS COPYING INSTALL \
+	NEWS build/config.guess build/config.sub build/depcomp \
 	build/install-sh build/ltmain.sh build/missing
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -220,20 +219,17 @@ target_alias = @target_alias@
 varstatedir = @varstatedir@
 FIXCONFIG = $(top_srcdir)/scripts/fixconfig
 @BUILD_GMETAD_FALSE@GMETAD_SUBDIR = 
-@BUILD_GMETAD_TRUE@GMETAD_SUBDIR = gmetad web
+@BUILD_GMETAD_TRUE@GMETAD_SUBDIR = gmetad
 EXTRA_SUBDIRS = "gmetad-python contrib solaris"
-EXTRA_DIST_FILES = 
 INCLUDES = @APR_INCLUDES@
 AUTOMAKE_OPTIONS = dist-bzip2 dist-tarZ dist-zip
 GANGLIA_SUBDIRS = lib libmetrics tests $(GMETAD_SUBDIR) gmond gstat gmetric include mans
 SUBDIRS = $(GANGLIA_SUBDIRS)
 # Make sure that no matter the setting for --with-gmetad
 # that the gmetad directory gets distributed
-GANGLIA_SUBDIRS_DIST = lib libmetrics tests gmetad web gmond gstat gmetric include mans
+GANGLIA_SUBDIRS_DIST = lib libmetrics tests gmetad gmond gstat gmetric include mans
 DIST_SUBDIRS = $(GANGLIA_SUBDIRS_DIST) 
-EXTRA_DIST = BUGS README.WIN README.AIX ganglia.spec.aix ganglia.spec ganglia.pod ganglia.html ganglia-config.in $(EXTRA_DIST_FILES)
-CHANGE_LOG_GEN_BIN = scripts/svn2cl.sh
-CHANGE_LOG_GEN_FLAGS = -i --alternate-strip-prefix="/trunk/monitor-core/" --break-before-msg=1 --reparagraph --revision HEAD:1
+EXTRA_DIST = BUGS README.WIN README.AIX ganglia.spec.aix ganglia.spec ganglia.pod ganglia.html ganglia-config.in
 CLEANFILES = ganglia.sub pod2htm*
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -245,15 +241,15 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/ganglia.inc $(am__co
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu '; \
-	      cd $(srcdir) && $(AUTOMAKE) --gnu  \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign '; \
+	      cd $(srcdir) && $(AUTOMAKE) --foreign  \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  Makefile
+	  $(AUTOMAKE) --foreign  Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -714,18 +710,14 @@ ganglia.html: ganglia.sub
 README: ganglia.sub
 	pod2text ganglia.sub README
 
-ChangeLog:
-	touch ChangeLog
-	$(CHANGE_LOG_GEN_BIN) $(CHANGE_LOG_GEN_FLAGS)
-
-dist-local: README ganglia.html ChangeLog
+dist-local: README ganglia.html
 
 # We go through and make sure all the files have
 # the same timestamp with the last command here...
 dist-hook:
 	for subdir in $(EXTRA_SUBDIRS); do \
 	  tar -c --exclude=".libs" --exclude "core.*" \
-	  --exclude ".svn" --exclude="*.o"  --exclude="*.lo" \
+	  --exclude="*.o"  --exclude="*.lo" \
 	  --exclude="*.la" --exclude=".deps" \
 	  --exclude="Makefile" --exclude="libtool" \
 	  --exclude="config.h" \
@@ -736,7 +728,7 @@ dist-hook:
 	  --exclude="configure.lineno" --exclude="configure.status.lineno" \
 	  -f - $$subdir | (cd $(distdir) && tar -xf -)\
 	done;
-	find $(distdir) -name ".svn" -type d -prune -exec rm -rf {} \;
+	tar -c --exclude ".git*" -f - web | (cd $(distdir) && tar -xf -)
 	touch $(distdir)/Makefile.am
 	find $(distdir) -exec touch -r $(distdir)/Makefile.am {} \;
 
@@ -747,21 +739,21 @@ dist-hook:
 ganglia-config:	ganglia-config.in $(FIXCONFIG)
 	$(FIXCONFIG) ganglia-config.in
 
-install-exec-hook:	ganglia-config
+install-exec-hook: ganglia-config
 	mkdir -p $(DESTDIR)$(bindir) && \
 	  $(INSTALL_SCRIPT) ganglia-config $(DESTDIR)$(bindir)/ganglia-config
 
-contrib/ganglia_gmond.xml:	contrib/ganglia_gmond.xml.in $(FIXCONFIG)
+contrib/ganglia_gmond.xml: contrib/ganglia_gmond.xml.in $(FIXCONFIG)
 	$(FIXCONFIG) contrib/ganglia_gmond.xml.in
 
-solaris/pkginfo:	solaris/pkginfo.in $(FIXCONFIG)
+solaris/pkginfo: solaris/pkginfo.in $(FIXCONFIG)
 	$(FIXCONFIG) solaris/pkginfo.in
 
 # Notice that some files declared in this hook never get installed anywhere
 # We use the hook to force the files to be generated, but they remain
 # within the build tree for someone to inspect or manually copy to
 # the desired location if needed
-install-data-hook:	contrib/ganglia_gmond.xml solaris/pkginfo
+install-data-hook: contrib/ganglia_gmond.xml solaris/pkginfo
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -1,4 +1,3 @@
-/* $Id: gmetad.c 2108 2009-11-23 15:17:38Z d_pocock $ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -241,7 +240,10 @@ write_root_summary(datum_t *key, datum_t *val, void *arg)
 
    /* err_msg("Writing Overall Summary for metric %s (%s)", name, sum); */
 
-   /* Save the data to a round robin database */
+   /* Save the data to a rrd file unless write_rrds == off */
+	 if (gmetad_config.write_rrds == 0)
+	     return 0;
+
    rc = write_data_to_rrd( NULL, NULL, name, sum, num, 15, 0, metric->slope);
    if (rc)
       {
@@ -450,7 +452,7 @@ main ( int argc, char *argv[] )
 
          /* Save them to RRD */
          hash_foreach(root.metric_summary, write_root_summary, NULL);
-         
+
          /* Remember our last run */
          last_metadata = apr_time_now();
       }

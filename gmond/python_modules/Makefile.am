@@ -1,2 +1,2 @@
-DIST_SUBDIRS = disk example network
-EXTRA_DIST = ./conf.d/*.pyconf
+DIST_SUBDIRS = db disk example memcached network process xen
+EXTRA_DIST = ./conf.d/*.pyconf ./conf.d/*.pyconf.disabled

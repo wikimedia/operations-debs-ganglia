@@ -1,5 +1,4 @@
 <?php
-/* $Id: physical_view.php 2481 2011-02-22 20:12:43Z bernardli $ */
 #
 # Displays the cluster in a physical view. Cluster nodes in
 # this view are located by Rack, Rank, and Plane in the physical
@@ -35,7 +34,7 @@ $CPUs = cluster_sum("cpu_num", $metrics);
 $Memory = sprintf("%.1f GB", cluster_sum("mem_total", $metrics)/(float)1048576);
 $Disk = cluster_sum("disk_total", $metrics);
 $Disk = $Disk ? sprintf("%.1f GB", $Disk) : "Unknown"; 
-list($most_full, $most_full_host) = cluster_max("part_max_used", $metrics);
+list($most_full, $most_full_host) = cluster_min("part_max_used", $metrics);
 $data->assign("CPUs", $CPUs);
 $data->assign("Memory", $Memory);
 $data->assign("Disk", $Disk);
@@ -90,7 +89,7 @@ foreach ($racks as $rack=>$v)
       $racks_data[$rack]["nodes"] = $racknodes;
       $racks_data[$rack]["tr"] = "";
 
-      if (! ($i++ % $hostcols)) {
+      if (! ($i++ % $conf['hostcols'])) {
          $racks_data["tr"] = "</tr><tr>";
       }
    }

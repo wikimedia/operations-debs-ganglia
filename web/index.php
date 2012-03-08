@@ -1,6 +1,5 @@
 <?php
-/* $Id: index.php 2363 2010-11-26 05:34:11Z bernardli $ */
-include_once "./eval_config.php";
+include_once "./eval_conf.php";
 # ATD - function.php must be included before get_context.php.  It defines some needed functions.
 include_once "./functions.php";
 include_once "./get_context.php";
@@ -8,9 +7,21 @@ include_once "./ganglia.php";
 include_once "./get_ganglia.php";
 include_once "./dwoo/dwooAutoload.php";
 
+$resource = GangliaAcl::ALL_CLUSTERS;
+if( $context == "grid" ) {
+  $resource = $grid;
+} else if ( $context == "cluster" || $context == "host" ) {
+  $resource = $clustername; 
+}
+if( ! checkAccess( $resource, GangliaAcl::VIEW, $conf ) ) {
+  header( "HTTP/1.1 403 Access Denied" );
+  die("<html><head><title>Access Denied</title><body><h4>Sorry, you do not have access to this resource.</h4></body></html>");
+}
+
+
 try
    {
-      $dwoo = new Dwoo($dwoo_compiled_dir);
+      $dwoo = new Dwoo($conf['dwoo_compiled_dir'], $conf['dwoo_cache_dir']);
    }
 catch (Exception $e)
    {
@@ -22,20 +33,15 @@ catch (Exception $e)
 # Useful for addons.
 $GHOME = ".";
 
-if ($context == "meta" or $context == "control")
-   {
+if ($context == "meta" or $context == "control") {
       $title = "$self $meta_designator Report";
       include_once "./header.php";
       include_once "./meta_view.php";
-   }
-else if ($context == "tree")
-   {
+} else if ($context == "tree") {
       $title = "$self $meta_designator Tree";
       include_once "./header.php";
       include_once "./grid_tree.php";
-   }
-else if ($context == "cluster" or $context == "cluster-summary")
-   {
+} else if ($context == "cluster" or $context == "cluster-summary") {
       if (preg_match('/cluster/i', $clustername))
          $title = "$clustername Report";
       else
@@ -43,30 +49,34 @@ else if ($context == "cluster" or $context == "cluster-summary")
 
       include_once "./header.php";
       include_once "./cluster_view.php";
-   }
-else if ($context == "physical")
-   {
+} else if ($context == "physical") {
       $title = "$clustername Physical View";
       include_once "./header.php";
       include_once "./physical_view.php";
-   }
-else if ($context == "node")
-   {
+} else if ($context == "node") {
       $title = "$hostname Node View";
       include_once "./header.php";
       include_once "./show_node.php";
-   }
-else if ($context == "host")
-   {
+} else if ($context == "host") {
       $title = "$hostname Host Report";
       include_once "./header.php";
       include_once "./host_view.php";
-   }
-else
-   {
+} else if ($context == "views") {
+      $title = "$viewname view";
+      include_once "./header.php";
+      include_once "./views_view.php";
+} else if ($context == "compare_hosts") {
+      $title = "Compare Hosts";
+      include_once "./header.php";
+      include_once "./compare_hosts.php";
+} else if ($context == "decompose_graph") {
+      $title = "Decompose graph";
+      include_once "./header.php";
+      include_once "./decompose_graph.php";
+} else {
       $title = "Unknown Context";
       print "Unknown Context Error: Have you specified a host but not a cluster?.";
-   }
+}
 include_once "./footer.php";
 
 ?>

@@ -1,5 +1,4 @@
 %{
-/* $Id: xml_hash.gperf 2619 2011-06-27 19:47:46Z vvuksan $ */
 #include <gmetad.h>
 %}
 struct xml_tag;

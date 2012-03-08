@@ -1,6 +1,4 @@
 <?php
-# $Id: show_node.php 2363 2010-11-26 05:34:11Z bernardli $
-#
 # Shows information on a particular node, specified by
 # node host name. Used in concert with the physical_view page.
 # 

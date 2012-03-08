@@ -1,7 +1,6 @@
 /**
  * @file daemon_inetd.c Functions for inetd daemons
  */
-/* $Id: daemon_inetd.c 1167 2008-03-31 06:58:24Z carenas $ */
 #include <stdarg.h>
 #include <syslog.h>
 

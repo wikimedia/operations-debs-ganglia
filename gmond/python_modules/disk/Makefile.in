@@ -181,7 +181,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 varstatedir = @varstatedir@
-pys = multidisk.py
+pys = diskfree.py multidisk.py
 EXTRA_DIST = $(pys)
 all: all-am
 
@@ -195,9 +195,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  gmond/python_modules/disk/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  gmond/python_modules/disk/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  gmond/python_modules/disk/Makefile
+	  $(AUTOMAKE) --foreign  gmond/python_modules/disk/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

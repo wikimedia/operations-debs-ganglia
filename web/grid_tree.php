@@ -1,5 +1,4 @@
 <?php
-/* $Id: grid_tree.php 2363 2010-11-26 05:34:11Z bernardli $ */
 $tpl = new Dwoo_Template_File( template("grid_tree.tpl") );
 $data = new Dwoo_Data();
 
