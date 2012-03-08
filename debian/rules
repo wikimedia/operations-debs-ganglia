@@ -89,7 +89,7 @@ install: build
 		debian/ganglia-monitor-python/usr/lib/ganglia/python_modules/
 
 #Install webfrontend
-	$(MAKE) -C web install APACHE_USER=www-data DESTDIR=$(CURDIR)/debian/ganglia-webfrontend/usr/share/ganglia-webfrontend
+	$(MAKE) -C web install APACHE_USER=www-data DESTDIR=$(CURDIR)/debian/ganglia-webfrontend/usr/share/ganglia-webfrontend  GWEB_STATEDIR=$(CURDIR)/debian/ganglia-webfrontend/var/lib
 	mkdir -p debian/ganglia-webfrontend/etc/apache2/conf.d/
 	cp -f web/debian/apache.conf \
 		 debian/ganglia-webfrontend/etc/ganglia-webfrontend
