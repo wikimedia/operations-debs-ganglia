@@ -58,6 +58,7 @@ clean:
 		ganglia-config contrib/ganglia_gmond.xml gmetad/gmetad.conf \
 		gmond/gmond.solaris.init gmond/modules/conf.d/modpython.conf solaris/pkginfo \
 		web/version.php web/conf.php
+        -rm -rf debian/patches/ .pc/
 	debconf-updatepo
 	dh_autotools-dev_restoreconfig
 	dh_clean
