@@ -10,7 +10,8 @@ if [ "$1" = "configure" ]; then
     db_get ganglia-webfrontend/webserver
     autoconfigure="$RET"
     webserver="apache2"
-
+    chown -R www-data /var/lib/ganglia/dwoo/cache
+e
     if [ "$autoconfigure" = true ]; then
         test -x /usr/sbin/$webserver || continue
 
