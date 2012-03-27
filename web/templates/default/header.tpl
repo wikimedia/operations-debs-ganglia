@@ -18,6 +18,7 @@
 <script type="text/javascript" src="js/combobox.js"></script>
 <script type="text/javascript">
     var server_utc_offset={$server_utc_offset};
+    var availablemetrics = [{$available_metrics}];
 
     var g_refresh_timer = setTimeout("refresh()", {$refresh} * 1000);
 
@@ -50,7 +51,11 @@
         refreshOverlayEvent();
         g_refresh_timer = setTimeout("refresh()", {$refresh} * 1000);
       } else if (selected_tab == "m") {
-        if ($.isFunction(window.refreshHostView)) {
+        if ($.isFunction(window.refreshClusterView)) {
+          refreshHeader();
+          refreshClusterView();
+          g_refresh_timer = setTimeout("refresh()", {$refresh} * 1000);
+        } else if ($.isFunction(window.refreshHostView)) {
           refreshHeader();
           refreshHostView();
           g_refresh_timer = setTimeout("refresh()", {$refresh} * 1000);
@@ -59,6 +64,55 @@
       } else
         ganglia_form.submit();
     }
+
+    $(function() {
+      g_overlay_events = ($("#overlay_events").val() == "true");
+
+      g_tabIndex = new Object();
+      g_tabName = [];
+      var tabName = ["m", "s", "v", "agg", "ch", "ev", "rot", "mob"];
+      var j = 0;
+      for (var i in tabName) {
+        if (tabName[i] == "ev" && !g_overlay_events)
+          continue;
+        g_tabIndex[tabName[i]] = j++;
+        g_tabName.push(tabName[i]);
+      }
+
+      // Follow tab's URL instead of loading its content via ajax
+      var tabs = $("#tabs");
+      if (tabs[0]) {
+        tabs.tabs();
+        // Restore previously selected tab
+        var selected_tab = $("#selected_tab").val();
+        //alert("selected_tab = " + selected_tab);
+        if (typeof g_tabIndex[selected_tab] != 'undefined') {
+          try {
+            //alert("Selecting tab: " + selected_tab);
+            tabs.tabs("select", g_tabIndex[selected_tab]);
+            if (selected_tab == "rot")
+              autoRotationChooser();
+          } catch (err) {
+            try {
+              alert("Error(ganglia.js): Unable to select tab: " + 
+                    selected_tab + ". " + err.getDescription());
+            } catch (err) {
+              // If we can't even show the error, fail silently.
+            }
+          }
+        }
+
+        tabs.bind("tabsselect", function(event, ui) {
+          $("#selected_tab").val(g_tabName[ui.index]);
+          if (g_tabName[ui.index] != "mob")
+            $.cookie("ganglia-selected-tab-" + window.name, ui.index);
+          if (ui.index == g_tabIndex["m"] ||
+              ui.index == g_tabIndex["v"] ||
+              ui.index == g_tabIndex["ch"])
+            ganglia_form.submit();
+        });
+      }
+    });
 
     $(function() {
       $("#metrics-picker").combobox();
@@ -147,6 +201,10 @@
 {$custom_time_head}
 </head>
 <body style="background-color: #ffffff;" onunload="g_refresh_timer=null">
+{if isset($user_header)}
+{include(file="user_header.tpl")}
+{/if}
+
 {if $auth_system_enabled}
 <div style="float:right">
   {if $username}
@@ -194,7 +252,7 @@
   <tr>
   <td colspan="2">
   <div id="sort_menu">
-   <b>Metric</b>&nbsp;&nbsp; <select name="m" id="metrics-picker">{$available_metrics}</select>&nbsp;&nbsp;
+   <b>Metric</b>&nbsp;&nbsp; <select name="m" id="metrics-picker">{$picker_metrics}</select>&nbsp;&nbsp;
      {$sort_menu}
   </div>
   </td>
