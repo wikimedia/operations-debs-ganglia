@@ -1,3 +1,9 @@
+ganglia (3.3.5-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Stuart Teasdale <sdt@debian.org>  Tue, 27 Mar 2012 22:22:03 +0100
+
 ganglia (3.3.1-1) unstable; urgency=low
 
   * New upstream release
