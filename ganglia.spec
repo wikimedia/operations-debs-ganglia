@@ -1,6 +1,6 @@
 #
 #
-# @configure_input@
+# ganglia.spec.  Generated from ganglia.spec.in by configure.
 #
 # IMPORTANT NOTE:
 # This spec file has conditional constructs using the noarch target.
@@ -8,13 +8,13 @@
 # (ex: i386, i686, x86_64) when calling rpmbuild as shown by the following
 # command line aimed at 80386 or higher CPUs :
 #
-# % rpmbuild -ta --target noarch,i386 ganglia-3.3.1.tar.gz
+# % rpmbuild -ta --target noarch,i386 ganglia-3.3.5.tar.gz
 #
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Summary: Ganglia Distributed Monitoring System
 Name: ganglia
-Version: 3.3.1
+Version: 3.3.5
 URL: http://ganglia.info/
 # The Release macro value is set in configure.in, please update it there.
 Release: 1
@@ -52,7 +52,7 @@ Obsoletes: ganglia-webfrontend < %{version}
 Provides: ganglia-webfrontend = %{version}
 # We should put rrdtool as a Requires too but rrdtool rpm support is very weak
 # so most people install from source
-#Requires: ganglia-gmetad >=  3.3.1
+#Requires: ganglia-gmetad >=  3.3.5
 Requires: php >= 5, php-gd, php-xml
 %if 0%{?suse_version}
 %define web_prefixdir /srv/www/htdocs/ganglia
@@ -144,9 +144,16 @@ via DSO at daemon start time instead of via gmetric
 Summary: Ganglia static libraries and header files http://ganglia.sourceforge.net/
 Group: Development/Libraries
 # revisit this list. it might be libtool bloat
-Requires: expat-devel, apr-devel > 1
+# MKN: Adjust requirements for SLES (20120229)
 %if 0%{?suse_version}
-Requires: libconfuse-devel, libexpat-devel, libapr1-devel, libganglia
+Requires: libconfuse-devel, libapr1-devel, libganglia
+%if 0%{?suse_version} > 1020
+Requires: libexpat-devel
+%else
+Requires: expat
+%endif
+%else
+Requires: expat-devel, apr-devel > 1
 %endif
 
 %description devel
@@ -402,6 +409,7 @@ fi
 %defattr(-,root,root,-)
 %{_includedir}/ganglia.h
 %{_includedir}/ganglia_gexec.h
+%{_includedir}/gm_file.h
 %{_includedir}/gm_metric.h
 %{_includedir}/gm_mmn.h
 %{_includedir}/gm_msg.h
@@ -500,7 +508,7 @@ fi
 - Set variable conf_dir to /etc/ganglia
 - Migrate /etc/{gmond,gmetad}.conf files to /etc/ganglia for upgrades etc.
 * Fri Nov 09 2007 Bernard Li <bernard@vanhpc.org>
-- Include .pyc files from @moduledir@/python_modules
+- Include .pyc files from /usr/local/lib64/ganglia/python_modules
 * Thu Nov 08 2007 Bernard Li <bernard@vanhpc.org>
 - Clean up /etc/ganglia/conf.d/*.conf.in files
 * Wed Oct 10 2007 Bernard Li <bernard@vanhpc.org>
