@@ -10,7 +10,7 @@ if [ ! -d /var/lib/ganglia/rrds ]; then
   mkdir -p /var/lib/ganglia/rrds
 fi
 if [ -d /var/lib/ganglia/rrds ]; then
-  chown -R ganglia:ganglia /var/lib/ganglia
+  chown ganglia:ganglia /var/lib/ganglia
   chown -R nobody /var/lib/ganglia/rrds
   chmod 0755 /var/lib/ganglia
   chmod -R o-w /var/lib/ganglia/rrds
