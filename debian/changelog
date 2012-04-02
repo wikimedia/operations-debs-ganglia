@@ -1,3 +1,9 @@
+ganglia (3.3.5-2) experimental; urgency=low
+
+  * Add dutch translation. Closes #658494.
+
+ -- Stuart Teasdale <sdt@debian.org>  Mon, 02 Apr 2012 08:41:13 +0100
+
 ganglia (3.3.5-1) experimental; urgency=low
 
   * New upstream version
