@@ -1,10 +1,13 @@
 ganglia (3.3.5-2) experimental; urgency=low
 
-  * Add dutch translation. Closes #658494.
-  * Activated hardening flags from dpkg-buildflags. Closes #655126.
-  * Change pid file generation so the daemons do it. Closes #651293, #526146, #65124
+  * Add dutch translation. Closes: #658494.
+  * Activated hardening flags from dpkg-buildflags. Closes: #655126.
+  * Change pid file generation so the daemons do it. 
+    Closes: #651293 #526146 #65124
+  * Add httpd to the depends: for the web front end. Closes: #578620.
+  * New translation for Polish. Closes: #667085.
 
- -- Stuart Teasdale <sdt@debian.org>  Mon, 02 Apr 2012 22:03:36 +0100
+ -- Stuart Teasdale <sdt@debian.org>  Wed, 04 Apr 2012 07:36:49 +0100
 
 ganglia (3.3.5-1) experimental; urgency=low
 
