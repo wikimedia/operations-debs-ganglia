@@ -6,8 +6,9 @@ ganglia (3.3.5-2) experimental; urgency=low
     Closes: #651293 #526146 #65124
   * Add httpd to the depends: for the web front end. Closes: #578620.
   * New translation for Polish. Closes: #667085.
+  * New translation for Brazilian Portuguese. Closes: #667563.
 
- -- Stuart Teasdale <sdt@debian.org>  Wed, 04 Apr 2012 07:36:49 +0100
+ -- Stuart Teasdale <sdt@debian.org>  Thu, 05 Apr 2012 18:27:56 +0100
 
 ganglia (3.3.5-1) experimental; urgency=low
 
