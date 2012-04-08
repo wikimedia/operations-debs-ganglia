@@ -1,4 +1,4 @@
-ganglia (3.3.5-2) experimental; urgency=low
+ganglia (3.3.5-2) unstable; urgency=low
 
   * Add dutch translation. Closes: #658494.
   * Activated hardening flags from dpkg-buildflags. Closes: #655126.
