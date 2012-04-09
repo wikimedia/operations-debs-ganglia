@@ -1,3 +1,9 @@
+ganglia (3.3.5-3) unstable; urgency=low
+
+  * PO translation didn't get into the package properly.
+
+ -- Stuart Teasdale <sdt@debian.org>  Mon, 09 Apr 2012 11:37:12 +0100
+
 ganglia (3.3.5-2) unstable; urgency=low
 
   * Add dutch translation. Closes: #658494.
