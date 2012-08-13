@@ -124,7 +124,7 @@
 .\" ========================================================================
 .\"
 .IX Title "gmond.conf 5"
-.TH gmond.conf 5 "2012-03-26" "ganglia/3.3.5" "Ganglia Monitoring System"
+.TH gmond.conf 5 "2012-08-13" "ganglia/3.3.8" "Ganglia Monitoring System"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -360,8 +360,8 @@ limits of memory and file descriptors.  If \fBgmond\fR is configured \fBdeaf\fR
 this attribute will be ignored.
 .PP
 The \fBudp_recv_channel\fR section has following attributes:
-\&\fBmcast_join\fR, \fBbind\fR, \fBport\fR, \fBmcast_if\fR, \fBfamily\fR.  The 
-\&\fBudp_recv_channel\fR can also have an \fBacl\fR definition (see
+\&\fBmcast_join\fR, \fBbind\fR, \fBport\fR, \fBmcast_if\fR, \fBfamily\fR and \fBretry_bind\fR.
+The \fBudp_recv_channel\fR can also have an \fBacl\fR definition (see
 \&\s-1ACCESS\s0 \s-1CONTROL\s0 \s-1LISTS\s0 below).
 .PP
 For example, the 2.5.x gmond ran with a single udp receive channel...
@@ -425,6 +425,22 @@ port for sFlow):
 Note: sFlow is unicast protocol, so don't include \fBmcast_join\fR join.
 Note: To use some other port for sFlow, set it here and then specify the port
 in an \fBsflow\fR section (see below).
+.PP
+\&\fBgmond\fR will fail to run if it can't bind to all defined
+\&\fBudp_recv_channel\fRs.  Sometimes, on machines configured by \s-1DHCP\s0,
+for example, the \fBgmond\fR daemon starts before a network address is
+assigned to the interface.  Consequently, the bind fails and the 
+\&\fBgmond\fR daemon does not run.  To assist in this situation, the
+boolean parameter \fBretry_bind\fR can be set to the value \fBtrue\fR
+and then the daemon will not abort on failure, it will enter a
+loop and repeat the bind attempt every 60 seconds:
+.PP
+.Vb 4
+\&  udp_recv_channel {
+\&    port = 6343
+\&    retry_bind = true
+\&  }
+.Ve
 .SS "tcp_accept_channel"
 .IX Subsection "tcp_accept_channel"
 You can specify as many \fBtcp_accept_channel\fR sections as you like
