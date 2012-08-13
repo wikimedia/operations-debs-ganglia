@@ -2,7 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<title>Ganglia Monitoring Daemon v3.3.5 Configuration</title>
+<title>Ganglia Monitoring Daemon v3.3.8 Configuration</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <link rev="made" href="mailto:root@localhost" />
 </head>
@@ -10,7 +10,7 @@
 <body style="background-color: white">
 <table border="0" width="100%" cellspacing="0" cellpadding="3">
 <tr><td class="block" style="background-color: #cccccc" valign="middle">
-<big><strong><span class="block">&nbsp;Ganglia Monitoring Daemon v3.3.5 Configuration</span></strong></big>
+<big><strong><span class="block">&nbsp;Ganglia Monitoring Daemon v3.3.8 Configuration</span></strong></big>
 </td></tr>
 </table>
 
@@ -244,8 +244,8 @@ can be an IPv4/IPv6 address or a resolvable hostname.</p>
 limits of memory and file descriptors.  If <strong>gmond</strong> is configured <strong>deaf</strong>
 this attribute will be ignored.</p>
 <p>The <strong>udp_recv_channel</strong> section has following attributes:
-<strong>mcast_join</strong>, <strong>bind</strong>, <strong>port</strong>, <strong>mcast_if</strong>, <strong>family</strong>.  The 
-<strong>udp_recv_channel</strong> can also have an <strong>acl</strong> definition (see
+<strong>mcast_join</strong>, <strong>bind</strong>, <strong>port</strong>, <strong>mcast_if</strong>, <strong>family</strong> and <strong>retry_bind</strong>.
+The <strong>udp_recv_channel</strong> can also have an <strong>acl</strong> definition (see
 ACCESS CONTROL LISTS below).</p>
 <p>For example, the 2.5.x gmond ran with a single udp receive channel...</p>
 <pre>
@@ -294,6 +294,19 @@ port for sFlow):</p>
 <p>Note: sFlow is unicast protocol, so don't include <strong>mcast_join</strong> join.
 Note: To use some other port for sFlow, set it here and then specify the port
 in an <strong>sflow</strong> section (see below).</p>
+<p><strong>gmond</strong> will fail to run if it can't bind to all defined
+<strong>udp_recv_channel</strong>s.  Sometimes, on machines configured by DHCP,
+for example, the <strong>gmond</strong> daemon starts before a network address is
+assigned to the interface.  Consequently, the bind fails and the 
+<strong>gmond</strong> daemon does not run.  To assist in this situation, the
+boolean parameter <strong>retry_bind</strong> can be set to the value <strong>true</strong>
+and then the daemon will not abort on failure, it will enter a
+loop and repeat the bind attempt every 60 seconds:</p>
+<pre>
+  udp_recv_channel {
+    port = 6343
+    retry_bind = true
+  }</pre>
 <p>
 </p>
 <h2><a name="tcp_accept_channel">tcp_accept_channel</a></h2>
@@ -602,7 +615,7 @@ a useful starting point for creating your own custom configuration.</p>
 <p>Copyright (c) 2005 The University of California, Berkeley</p>
 <table border="0" width="100%" cellspacing="0" cellpadding="3">
 <tr><td class="block" style="background-color: #cccccc" valign="middle">
-<big><strong><span class="block">&nbsp;Ganglia Monitoring Daemon v3.3.5 Configuration</span></strong></big>
+<big><strong><span class="block">&nbsp;Ganglia Monitoring Daemon v3.3.8 Configuration</span></strong></big>
 </td></tr>
 </table>
 
