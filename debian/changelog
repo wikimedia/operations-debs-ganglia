@@ -4,7 +4,10 @@ ganglia (3.3.8-1) unstable; urgency=low
   * Fix un-initialized return code variable
   * Fix memory leak
   * Fix issue where Ganglia fails to start with NetworkManager
+    (Closes: #638628)
   * Extra logging of buffer sizes for troubleshooting a common problem
+  * Add Daniel Pocock as uploader (Debian Maintainer)
+  * Add VCS URLs to control file.
 
  -- Daniel Pocock <daniel@pocock.com.au>  Mon, 13 Aug 2012 15:17:28 +0200
 
