@@ -141,9 +141,6 @@ metric_report_start(Generic_t *self, datum_t *key, client_t *client, void *arg)
    tn = client->now.tv_sec - metric->t0.tv_sec;
    if (tn<0) tn = 0;
 
-   if (metric->dmax && metric->dmax < tn)
-     return 0;
-
    rc=xml_print(client, "<METRIC NAME=\"%s\" VAL=\"%s\" TYPE=\"%s\" "
       "UNITS=\"%s\" TN=\"%u\" TMAX=\"%u\" DMAX=\"%u\" SLOPE=\"%s\" "
       "SOURCE=\"%s\">\n",
@@ -189,10 +186,10 @@ host_report_start(Generic_t *self, datum_t *key, client_t *client, void *arg)
 
    /* Note the hash key is the host's IP address. */
    rc = xml_print(client, "<HOST NAME=\"%s\" IP=\"%s\" REPORTED=\"%u\" "
-      "TN=\"%u\" TMAX=\"%u\" DMAX=\"%u\" LOCATION=\"%s\" GMOND_STARTED=\"%u\" TAGS=\"%s\">\n",
+      "TN=\"%u\" TMAX=\"%u\" DMAX=\"%u\" LOCATION=\"%s\" GMOND_STARTED=\"%u\">\n",
       name, getfield(host->strings, host->ip), host->reported, tn,
       host->tmax, host->dmax, getfield(host->strings, host->location),
-		  host->started, getfield(host->strings, host->tags));
+      host->started);
 
    return rc;
 }
@@ -421,7 +418,6 @@ process_path (client_t *client, char *path, datum_t *myroot, datum_t *key)
          q = strchr(p, '/');
          if (!q) q=pathend;
       
-         /* len is limited in size by REQUESTLEN through readline() */
          len = q-p;
          element = malloc(len + 1);
          if ( element == NULL )

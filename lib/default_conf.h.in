@@ -21,8 +21,7 @@ globals {\n\
   mute = no\n\
   deaf = no\n\
   allow_extra_data = yes\n\
-  host_dmax = 86400 /*secs. Expires (removes from web interface) hosts in 1 day */\n\
-  host_tmax = 20 /*secs */\n\
+  host_dmax = 0 /*secs */\n\
   cleanup_threshold = 300 /*secs */\n\
   gexec = no\n\
   send_metadata_interval = 0 /*secs */\n\
@@ -63,7 +62,6 @@ udp_recv_channel {\n\
   mcast_join = 239.2.11.71\n\
   port = 8649\n\
   bind = 239.2.11.71\n\
-  retry_bind = false\n\
 }\n\
 \n\
 /* You can specify as many tcp_accept_channels as you like to share\n\
@@ -71,26 +69,6 @@ udp_recv_channel {\n\
 tcp_accept_channel {\n\
   port = 8649\n\
 }\n\
-\n\
-"
-
-#define SFLOW_CONFIGURATION "\
-/* Channel to receive sFlow datagrams */\n\
-#udp_recv_channel {\n\
-#  port = 6343\n\
-#}\n\
-\n\
-/* Optional sFlow settings */\n\
-#sflow {\n\
-# udp_port = 6343\n\
-# accept_vm_metrics = yes\n\
-# accept_jvm_metrics = yes\n\
-# multiple_jvm_instances = no\n\
-# accept_http_metrics = yes\n\
-# multiple_http_instances = no\n\
-# accept_memcache_metrics = yes\n\
-# multiple_memcache_instances = no\n\
-#}\n\
 \n\
 "
 
@@ -132,6 +110,8 @@ modules {\n\
 @modpathstart@    path = \"modsys.so\"\n\
   }\n\
 }\n\
+\n\
+include ('" SYSCONFDIR "/conf.d/*.conf')\n\
 \n\
 /* The old internal 2.5.x metric array has been replaced by the following\n\
    collection_group directives.  What follows is the default behavior for\n\
@@ -380,8 +360,6 @@ collection_group {\n\
     title = \"Maximum Disk Space Used\"\n\
   }\n\
 }\n\
-\n\
-include (\"" SYSCONFDIR "/conf.d/*.conf\")\n\
 \n\
 "
 

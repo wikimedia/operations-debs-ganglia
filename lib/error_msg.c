@@ -1,6 +1,7 @@
 /**
  * @file error_msg.c Error Handling Functions
  */
+/* $Id$ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -130,20 +131,20 @@ static void
 err_doit (int errnoflag, int level, const char *fmt, va_list ap)
 {
    int errno_save, n;
-   char buf[MAXLINE + 1];
+   char buf[MAXLINE];
 
    if(ganglia_quiet_errors)
       return;
 
    errno_save = errno;		/* value caller might want printed */
 #ifdef	HAVE_VSNPRINTF
-   vsnprintf (buf, MAXLINE, fmt, ap);	/* safe */
+   vsnprintf (buf, sizeof (buf), fmt, ap);	/* this is safe */
 #else
-   vsprintf (buf, fmt, ap);	/* not safe */
+   vsprintf (buf, fmt, ap);	/* this is not safe */
 #endif
    n = strlen (buf);
    if (errnoflag)
-      snprintf (buf + n, MAXLINE - n, ": %s", strerror (errno_save));
+      snprintf (buf + n, sizeof (buf) - n, ": %s", strerror (errno_save));
 #ifdef HAVE_STRLCAT
    strlcat (buf, "\n", MAXLINE);
 #else
@@ -152,7 +153,7 @@ err_doit (int errnoflag, int level, const char *fmt, va_list ap)
 
    if (daemon_proc)
      {
-        syslog (level, "%s", buf);
+        syslog (level, buf);
      }
    else
      {

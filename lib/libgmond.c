@@ -22,7 +22,6 @@
 #include <apr_lib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <dirent.h>
 #include <fnmatch.h>
 
@@ -60,15 +59,11 @@ static cfg_opt_t globals_opts[] = {
   CFG_BOOL("mute", 0, CFGF_NONE),
   CFG_BOOL("deaf", 0, CFGF_NONE),
   CFG_BOOL("allow_extra_data", 1, CFGF_NONE),
-  CFG_INT("host_dmax", 86400, CFGF_NONE),
-  CFG_INT("host_tmax", 20, CFGF_NONE),
+  CFG_INT("host_dmax", 0, CFGF_NONE),
   CFG_INT("cleanup_threshold", 300, CFGF_NONE),
   CFG_BOOL("gexec", 0, CFGF_NONE),
   CFG_INT("send_metadata_interval", 0, CFGF_NONE),
   CFG_STR("module_dir", NULL, CFGF_NONE),
-  CFG_STR("override_hostname", NULL, CFGF_NONE),
-  CFG_STR("override_ip", NULL, CFGF_NONE),
-  CFG_STR("tags", NULL, CFGF_NONE),
   CFG_END()
 };
 
@@ -103,7 +98,6 @@ static cfg_opt_t udp_recv_channel_opts[] = {
   CFG_STR("mcast_if", NULL, CFGF_NONE),
   CFG_SEC("acl", acl_opts, CFGF_NONE), 
   CFG_STR("family", "inet4", CFGF_NONE),
-  CFG_BOOL("retry_bind", cfg_false, CFGF_NONE),
   CFG_END()
 };
 
@@ -143,38 +137,17 @@ static cfg_opt_t metric_module_param[] = {
 static cfg_opt_t metric_module_opts[] = {
   CFG_STR("name", NULL, CFGF_NONE),
   CFG_STR("language", NULL, CFGF_NONE),
-  CFG_BOOL("enabled", 1, CFGF_NONE),
+  CFG_BOOL("Enabled", 1, CFGF_NONE),
   CFG_STR("path", NULL, CFGF_NONE),
   CFG_STR("params", NULL, CFGF_NONE),
   CFG_SEC("param", metric_module_param, CFGF_TITLE | CFGF_MULTI),
   CFG_END()
 };
 
-/* 
- * this section can't contain regular options because "modules"
- * is not defined CFGF_MULTI, even if it is presented multiple times
- * in the configuration.
- * CFGF_MULTI sections will collapse and be accessible with one
- * simple cfg_getsec() call though and are OK.
- */
 static cfg_opt_t metric_modules_opts[] = {
   CFG_SEC("module", metric_module_opts, CFGF_MULTI),
   CFG_END()
 };
-
-#ifdef SFLOW
-static cfg_opt_t sflow_opts[] = {
-  CFG_INT("udp_port", 6343, CFGF_NONE ),
-  CFG_BOOL("accept_vm_metrics", 1, CFGF_NONE ),
-  CFG_BOOL("accept_http_metrics", 1, CFGF_NONE ),
-  CFG_BOOL("multiple_http_instances", 0, CFGF_NONE ),
-  CFG_BOOL("accept_memcache_metrics", 1, CFGF_NONE ),
-  CFG_BOOL("multiple_memcache_instances", 0, CFGF_NONE ),
-  CFG_BOOL("accept_jvm_metrics", 1, CFGF_NONE ),
-  CFG_BOOL("multiple_jvm_instances", 0, CFGF_NONE ),
-  CFG_END()
-};
-#endif
 
 static cfg_opt_t gmond_opts[] = {
   CFG_SEC("cluster",   cluster_opts, CFGF_NONE),
@@ -186,9 +159,6 @@ static cfg_opt_t gmond_opts[] = {
   CFG_SEC("collection_group",  collection_group_opts, CFGF_MULTI),
   CFG_FUNC("include", Ganglia_cfg_include),
   CFG_SEC("modules",  metric_modules_opts, CFGF_NONE),
-#ifdef SFLOW
-CFG_SEC("sflow", sflow_opts, CFGF_NONE),
-#endif
   CFG_END()
 }; 
 
@@ -204,9 +174,6 @@ build_default_gmond_configuration(Ganglia_pool p)
   apr_pool_t *context=(apr_pool_t*)p;
 
   default_gmond_configuration = apr_pstrdup(context, BASE_GMOND_CONFIGURATION);
-#ifdef SFLOW
-  default_gmond_configuration = apr_pstrcat(context, default_gmond_configuration, SFLOW_CONFIGURATION, NULL);
-#endif
   default_gmond_configuration = apr_pstrcat(context, default_gmond_configuration, COLLECTION_GROUP_LIST, NULL);
 #if SOLARIS
   default_gmond_configuration = apr_pstrcat(context, default_gmond_configuration, SOLARIS_SPECIFIC_CONFIGURATION, NULL);
@@ -440,12 +407,6 @@ Ganglia_metric_create( Ganglia_pool parent_pool )
 int
 Ganglia_metadata_send( Ganglia_metric gmetric, Ganglia_udp_send_channels send_channels )
 {
-  return Ganglia_metadata_send_real( gmetric, send_channels, NULL );
-}
-
-int
-Ganglia_metadata_send_real( Ganglia_metric gmetric, Ganglia_udp_send_channels send_channels, char *override_string )
-{
   int len, i;
   XDR x;
   char gmetricmsg[GANGLIA_MAX_MESSAGE_LEN];
@@ -460,20 +421,9 @@ Ganglia_metadata_send_real( Ganglia_metric gmetric, Ganglia_udp_send_channels se
 
   msg.id = gmetadata_full;
   memcpy( &(msg.Ganglia_metadata_msg_u.gfull.metric), gmetric->msg, sizeof(Ganglia_metadata_message));
+  msg.Ganglia_metadata_msg_u.gfull.metric_id.host = apr_pstrdup (gm_pool, (char*)myhost);
   msg.Ganglia_metadata_msg_u.gfull.metric_id.name = apr_pstrdup (gm_pool, gmetric->msg->name);
-  debug_msg("  msg.Ganglia_metadata_msg_u.gfull.metric_id.name: %s\n", msg.Ganglia_metadata_msg_u.gfull.metric_id.name);
-  if ( override_string != NULL )
-    {
-      msg.Ganglia_metadata_msg_u.gfull.metric_id.host = apr_pstrdup (gm_pool, (char*)override_string);
-      debug_msg("  msg.Ganglia_metadata_msg_u.gfull.metric_id.host: %s\n", msg.Ganglia_metadata_msg_u.gfull.metric_id.host);
-      msg.Ganglia_metadata_msg_u.gfull.metric_id.spoof = TRUE;
-    }
-    else
-    {
-      msg.Ganglia_metadata_msg_u.gfull.metric_id.host = apr_pstrdup (gm_pool, (char*)myhost);
-      debug_msg("  msg.Ganglia_metadata_msg_u.gfull.metric_id.host: %s\n", msg.Ganglia_metadata_msg_u.gfull.metric_id.host);
-      msg.Ganglia_metadata_msg_u.gfull.metric_id.spoof = FALSE;
-    }
+  msg.Ganglia_metadata_msg_u.gfull.metric_id.spoof = FALSE;
 
   arr = apr_table_elts(gmetric->extra);
   elts = (const apr_table_entry_t *)arr->elts;
@@ -517,7 +467,7 @@ Ganglia_metadata_send_real( Ganglia_metric gmetric, Ganglia_udp_send_channels se
 }
 
 int
-Ganglia_value_send_real( Ganglia_metric gmetric, Ganglia_udp_send_channels send_channels, char *override_string )
+Ganglia_value_send( Ganglia_metric gmetric, Ganglia_udp_send_channels send_channels )
 {
   int len, i;
   XDR x;
@@ -532,17 +482,9 @@ Ganglia_value_send_real( Ganglia_metric gmetric, Ganglia_udp_send_channels send_
       apr_gethostname( (char*)myhost, APRMAXHOSTLEN+1, gm_pool);
 
   msg.id = gmetric_string;
-  if (override_string != NULL)
-    {
-      msg.Ganglia_value_msg_u.gstr.metric_id.host = apr_pstrdup (gm_pool, (char*)override_string);
-      msg.Ganglia_value_msg_u.gstr.metric_id.spoof = TRUE;
-    }
-    else
-    {
-      msg.Ganglia_value_msg_u.gstr.metric_id.host = apr_pstrdup (gm_pool, (char*)myhost);
-      msg.Ganglia_value_msg_u.gstr.metric_id.spoof = FALSE;
-    }
+  msg.Ganglia_value_msg_u.gstr.metric_id.host = apr_pstrdup (gm_pool, (char*)myhost);
   msg.Ganglia_value_msg_u.gstr.metric_id.name = apr_pstrdup (gm_pool, gmetric->msg->name);
+  msg.Ganglia_value_msg_u.gstr.metric_id.spoof = FALSE;
   msg.Ganglia_value_msg_u.gstr.fmt = apr_pstrdup (gm_pool, "%s");
   msg.Ganglia_value_msg_u.gstr.str = apr_pstrdup (gm_pool, gmetric->value);
 
@@ -579,12 +521,6 @@ Ganglia_value_send_real( Ganglia_metric gmetric, Ganglia_udp_send_channels send_
 }
 
 int
-Ganglia_value_send( Ganglia_metric gmetric, Ganglia_udp_send_channels send_channels )
-{
-  return Ganglia_value_send_real( gmetric, send_channels, NULL );
-}
-
-int
 Ganglia_metric_send( Ganglia_metric gmetric, Ganglia_udp_send_channels send_channels )
 {
   int ret = Ganglia_metadata_send(gmetric, send_channels);
@@ -607,13 +543,11 @@ check_value( char *type, char* value)
 {
 char *tail;
 int ret=1;
-double d;
-long l;
 
   if (strcmp(type,"float")||strcmp(type,"double"))
-    d = strtod(value,&tail);
+    strtod(value,&tail);
   else
-    l = strtol(value,&tail,10);
+    strtol(value,&tail,10);
 
   if(strlen(tail)==0)
     ret=0;
@@ -792,7 +726,7 @@ Ganglia_cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
     else if (has_wildcard(fname))
     {
         int ret;
-        char *path = calloc(strlen(fname) + 1, sizeof(char));
+        char *path = calloc(sizeof(char), strlen(fname)+1);
         char *pattern = NULL;
         char *idx = strrchr(fname, '/');
         apr_pool_t *p;
@@ -815,17 +749,9 @@ Ganglia_cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
         apr_pool_create(&p, NULL);
         if (apr_temp_dir_get((const char**)&dirname, p) != APR_SUCCESS) {
-#ifndef LINUX
             cfg_error(cfg, "failed to determine the temp dir");
             apr_pool_destroy(p);
             return 1;
-#else
-            /*
-             * workaround APR BUG46297 by using the POSIX shared memory
-             * ramdrive that is available since glibc 2.2
-             */
-            dirname = apr_psprintf(p, "%s", "/dev/shm");
-#endif
         }
         dirname = apr_psprintf(p, "%s/%s", dirname, tn);
 
@@ -844,11 +770,16 @@ Ganglia_cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
                 ret = fnmatch(pattern, entry->d_name, 
                               FNM_PATHNAME|FNM_PERIOD);
                 if (ret == 0) {
-                    char *newpath, *line;
+                    char *newpath = malloc (strlen(path) + strlen(entry->d_name)+2);
 
-                    newpath = apr_psprintf (p, "%s/%s", path, entry->d_name);
-                    line = apr_pstrcat(p, "include ('", newpath, "')\n", NULL);
-                    apr_file_puts(line, ftemp);
+                    sprintf (newpath, "%s/%s", path, entry->d_name);
+
+                    if (newpath) {
+                        char *line = apr_pstrcat(p, "include ('", newpath, "')\n", NULL);
+
+                        apr_file_puts(line, ftemp);
+                        free(newpath);
+                    }
                 }
             }
             closedir(dir);

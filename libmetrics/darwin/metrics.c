@@ -984,7 +984,7 @@ get_netbw(double *in_bytes, double *out_bytes,
                         fprintf(stderr, "msglen = %d\n", ifm->ifm_msglen);
                         fprintf(stderr, "buf:%p, next:%p, lim:%p\n", buf, next,
                                 lim);
-                        goto output;
+                        exit (1);
                 }
 
                 next += ifm->ifm_msglen;

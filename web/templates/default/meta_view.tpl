@@ -1,146 +1,72 @@
-{if isset($filters)}
-<table border="0" width="100%">
-  <tr>
-    {foreach $filters filter}
-      <td>
-        <b>{$filter.filter_name}</b>
-        <select name="choose_filter[{$filter.filter_shortname}]" OnChange="ganglia_form.submit();">
-          <option name=""></option>
-          {foreach $filter.choice choice}
-          {if $choose_filter.$filter.filter_shortname == $choice}
-          <option name="{$choice}" selected>{$choice}</option>
-          {else}
-          <option name="{$choice}">{$choice}</option>
-          {/if}
-          {/foreach}
-        </select>
-      </td>
-    {/foreach}
-  </tr>
-</table>
-{/if}
+<TABLE BORDER="0" WIDTH="100%">
 
-<table border="0" width="100%">
+<!-- START BLOCK : source_info -->
+<TR>
+  <TD CLASS={class} COLSPAN=3>
+   <A HREF="{url}"><STRONG>{name}</STRONG></A> {alt_view}
+  </TD>
+</TR>
 
-<tr>
-<td colspan="3">&nbsp;</td>
-</tr>
-
-{foreach $sources source}
-<tr>
-  <td class={$source.class} colspan="3">
-    <a href="{$source.url}"><strong>{$source.name}</strong></a> {$source.alt_view}
-  </td>
-</tr>
-
-<tr>
-{if isset($source.public)}
-<td align="LEFT" valign="TOP">
-<table cellspacing="1" cellpadding="1" width="100%" border="0">
- <tr><td>CPUs Total:</td><td align="left"><B>{$source.cpu_num}</B></td></tr>
- <tr><td width="80%">Hosts up:</td><td align="left"><B>{$source.num_nodes}</B></td></tr>
- <tr><td>Hosts down:</td><td align="left"><B>{$source.num_dead_nodes}</B></td></tr>
+<TR>
+ <!-- START BLOCK : public -->
+ <TD ALIGN="LEFT" VALIGN="TOP">
+<table cellspacing=1 cellpadding=1 width="100%" border=0>
+ <tr><td>CPUs Total:</td><td align=left><B>{cpu_num}</B></td></tr>
+ <tr><td width="80%">Hosts up:</td><td align=left><B>{num_nodes}</B></td></tr>
+ <tr><td>Hosts down:</td><td align=left><B>{num_dead_nodes}</B></td></tr>
  <tr><td>&nbsp;</td></tr>
- <tr><td class="footer" colspan="2">{$source.cluster_load}</td></tr>
- <tr><td class="footer" colspan="2">{$source.cluster_util}</td></tr>
- <tr><td class="footer" colspan="2">{$source.localtime}</td></tr>
+ <tr><td class=footer colspan=2>{cluster_load}</td></tr>
+ <tr><td class=footer colspan=2>{localtime}</td></tr>
 </table>
-</td>
+  </TD>
 
-{if isset($source.self_summary_graphs)}
-<td>
- <table align="center" border="0">
-  <tr>
+  <TD VALIGN=top align=right>
+  <A HREF="{url}">
+   <IMG SRC="./graph.php?{graph_url}&g=load_report&z=medium&r={range}"
+       ALT="{name} Load" BORDER="0">
+  </A>
+  </TD>
 
-   <td>
-    <a href="./graph_all_periods.php?{$source.graph_url}&amp;g=load_report&amp;z=large">
-      <img src="./graph.php?{$source.graph_url}&amp;g=load_report&amp;z=medium"
-           alt="{$source.name} LOAD" border="0" />
-    </a>
-   </td>
-   <td>
-    <a href="./graph_all_periods.php?{$source.graph_url}&amp;g=mem_report&amp;z=large">
-      <img src="./graph.php?{$source.graph_url}&amp;g=mem_report&amp;z=medium"
-           alt="{$source.name} MEM" border="0" />
-    </a>
-   </td>
-  </tr>
+  <TD VALIGN=top>
+  <A HREF="{url}" VALIGN=top>
+   <IMG SRC="./graph.php?{graph_url}&g=mem_report&z=medium&r={range}"
+       ALT="{name} MEM" BORDER="0">
+  </A>
+   </TD>
+<!-- END BLOCK : public -->
 
-  <tr>
-   <td>
-    <a href="./graph_all_periods.php?{$source.graph_url}&amp;g=cpu_report&amp;z=large">
-      <img src="./graph.php?{$source.graph_url}&amp;g=cpu_report&amp;z=medium"
-           alt="{$source.name} CPU" border="0" />
-    </a>
-   </td>
-   <td>
-    <a href="./graph_all_periods.php?{$source.graph_url}&amp;g=network_report&amp;z=large">
-      <img src="./graph.php?{$source.graph_url}&amp;g=network_report&amp;z=medium"
-           alt="{$source.name} NETWORK" border="0" />
-    </a>
-   </td>
-
-  </tr>
- </table>
-</td>
-{/if}
-
-{if isset($source.summary_graphs)}
-<td>
- <table align="center" border="0">
-  <tr>
-
-      <td>
-      <a href="{$source.url}">
-        <img src="./graph.php?{$source.graph_url}&amp;g=load_report&amp;z=medium&amp;r={$source.range}"
-             alt="{$source.name} LOAD" border="0" />
-      </a>
-      </td>
-
-      <td>
-      <a href="{$source.url}">
-        <img src="./graph.php?{$source.graph_url}&amp;g=network_report&amp;z=medium&amp;r={$source.range}"
-             alt="{$source.name} MEM" border="0" />
-      </a>
-      </td>
-
-  </tr>
- </td>
-</table>
-{/if}
-{/if}
-
-
-{if isset($source.private)}
-  <td align="LEFT" valign="TOP">
-<table cellspacing="1" cellpadding="1" width="100%" border="0">
- <tr><td>CPUs Total:</td><td align="left"><B>{$source.cpu_num}</B></td></tr>
- <tr><td width="80%">Nodes:</td><td align="left"><B>{$source.num_nodes}</B></td></tr>
+<!-- START BLOCK : private -->
+  <TD ALIGN="LEFT" VALIGN="TOP">
+<table cellspacing=1 cellpadding=1 width=100% border=0>
+ <tr><td>CPUs Total:</td><td align=left><B>{cpu_num}</B></td></tr>
+ <tr><td width=80%>Nodes:</td><td align=left><B>{num_nodes}</B></td></tr>
  <tr><td>&nbsp;</td></tr>
- <tr><td class="footer" colspan="2">{$source.localtime}</td></tr>
+ <tr><td class=footer colspan=2>{localtime}</td></tr>
 </table>
-   </td>
-   <td colspan="2" align=center>This is a private cluster.</td>
-{/if}
-</tr>
-{/foreach}
-</table>
+   </TD>
+   <TD COLSPAN=2 align=center>This is a private cluster.</TD>
+<!-- END BLOCK : private -->
 
-{if isset($show_snapshot)}
-<table border="0" width="100%">
-<tr>
-  <td colspan="2" class="title">Snapshot of the {$self} |
-    <font size="-1"><a href="./cluster_legend.html">Legend</a></font>
-  </td>
-</tr>
-</table>
+</TR>
+<!-- END BLOCK : source_info -->
+</TABLE>
 
-<center>
-<table cellspacing="12" cellpadding="2">
-{foreach $snap_rows snap_row}
-<tr>{$snap_row.names}</tr>
-<tr>{$snap_row.images}</tr>
-{/foreach}
-</table>
-</center>
-{/if}
+<!-- START BLOCK : show_snapshot -->
+<TABLE BORDER="0" WIDTH="100%">
+<TR>
+  <TD COLSPAN="2" CLASS=title>Snapshot of the {self} |
+   <FONT SIZE="-1"><A HREF="./cluster_legend.html" ALT="Node Image Legend">Legend</A></FONT>
+  </TD>
+</TR>
+</TABLE>
+
+<CENTER>
+<TABLE CELLSPACING=12 CELLPADDING=2>
+<!-- START BLOCK : snap_row -->
+<tr>{names}</tr>
+<tr>{images}</tr>
+<!-- END BLOCK : snap_row -->
+</TABLE>
+</CENTER>
+<!-- END BLOCK : show_snapshot -->
+

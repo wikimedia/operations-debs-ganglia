@@ -1,4 +1,5 @@
 /*
+ * $Id$
  * This code was originally written by the authors below but 
  * I rewrote it and took out all the glib dependencies. 
  *

@@ -1,2 +1,2 @@
-pys = diskfree.py diskstat.py multidisk.py
+pys = multidisk.py
 EXTRA_DIST = $(pys)

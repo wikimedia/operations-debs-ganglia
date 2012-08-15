@@ -1,5 +1,6 @@
 #! /bin/sh
 
+##  $Id$
 ##
 ##  Make variable substitutions in configuration files.
 ##

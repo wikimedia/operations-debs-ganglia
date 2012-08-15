@@ -1,4 +1,5 @@
 <?php
+/* $Id$ */
 #
 # Parses ganglia XML tree.
 #
@@ -7,10 +8,6 @@
 # sacerdoti: These are now context-sensitive, and hold only as much
 # information as we need to make the page.
 #
-
-$gweb_root = dirname(__FILE__);
-
-include_once($gweb_root . "/version.php");
 
 $error="";
 
@@ -36,11 +33,12 @@ $metrics = array();
 $version = array();
 
 # The web frontend version, from conf.php.
-$version["webfrontend"] = $GLOBALS["ganglia_version"];
+#$version["webfrontend"] = "$majorversion.$minorversion.$microversion";
+$version["webfrontend"] = "$ganglia_version";
 
 # Get rrdtool version
 $rrdtool_version = array();
-exec($conf['rrdtool'], $rrdtool_version);
+exec(RRDTOOL, $rrdtool_version);
 $rrdtool_version = explode(" ", $rrdtool_version[0]);
 $rrdtool_version = $rrdtool_version[1];
 $version["rrdtool"] = "$rrdtool_version";
@@ -48,7 +46,6 @@ $version["rrdtool"] = "$rrdtool_version";
 # The name of our local grid.
 $self = " ";
 
-$index_array = array();
 
 # Returns true if the host is alive. Works for both old and new gmond sources.
 function host_alive($host, $cluster)
@@ -80,10 +77,8 @@ function preamble($ganglia)
 
 function start_meta ($parser, $tagname, $attrs)
 {
-   global $metrics, $grid, $self, $debug;
+   global $metrics, $grid, $self;
    static $sourcename, $metricname;
-
-   if ($debug) print "<br/>DEBUG: parser start meta [$tagname]\n";
 
    switch ($tagname)
       {
@@ -93,7 +88,6 @@ function start_meta ($parser, $tagname, $attrs)
 
          case "GRID":
          case "CLUSTER":
-            if ($debug) print "<br/>DEBUG: parser start meta GRID|CLUSTER\n";
             # Our grid will be first.
             if (!$sourcename) $self = $attrs['NAME'];
 
@@ -105,7 +99,7 @@ function start_meta ($parser, $tagname, $attrs)
             break;
 
          case "METRICS":
-            $metricname = rawurlencode($attrs['NAME']);
+            $metricname = $attrs['NAME'];
             $metrics[$sourcename][$metricname] = $attrs;
             break;
 
@@ -122,10 +116,9 @@ function start_meta ($parser, $tagname, $attrs)
 
 function start_cluster ($parser, $tagname, $attrs)
 {
-   global $metrics, $cluster, $self, $grid, $hosts_up, $hosts_down, $debug;
+   global $metrics, $cluster, $self, $grid, $hosts_up, $hosts_down;
    static $hostname;
 
-   if ($debug) print "<br/>DEBUG: parser start cluster [$tagname]\n";
    switch ($tagname)
       {
          case "GANGLIA_XML":
@@ -162,9 +155,6 @@ function start_cluster ($parser, $tagname, $attrs)
             $metrics[$hostname]['last_reported']['NAME'] = "REPORTED";
             $metrics[$hostname]['last_reported']['VAL'] = uptime($cluster['LOCALTIME'] - $attrs['REPORTED']);
             $metrics[$hostname]['last_reported']['TYPE'] = "string";
-            $metrics[$hostname]['last_reported_timestamp']['NAME'] = "REPORTED TIMESTAMP";
-            $metrics[$hostname]['last_reported_timestamp']['VAL'] = $attrs['REPORTED'];
-            $metrics[$hostname]['last_reported_timestamp']['TYPE'] = "uint32";
             $metrics[$hostname]['ip_address']['NAME'] = "IP";
             $metrics[$hostname]['ip_address']['VAL'] = $attrs['IP'];
             $metrics[$hostname]['ip_address']['TYPE'] = "string";
@@ -174,7 +164,7 @@ function start_cluster ($parser, $tagname, $attrs)
             break;
 
          case "METRIC":
-            $metricname = rawurlencode($attrs['NAME']);
+            $metricname = $attrs['NAME'];
             $metrics[$hostname][$metricname] = $attrs;
             break;
 
@@ -183,43 +173,6 @@ function start_cluster ($parser, $tagname, $attrs)
       }
 }
 
-function start_everything ($parser, $tagname, $attrs)
-{
-   global $index_array, $hosts, $metrics, $cluster, $self, $grid, $hosts_up, $hosts_down, $debug;
-   static $hostname, $cluster_name;
-
-   if ($debug) print "<br/>DEBUG: parser start everything [$tagname]\n";
-
-   switch ($tagname)
-      {
-         case "GANGLIA_XML":
-            preamble($attrs);
-            break;
-         case "GRID":
-            $self = $attrs['NAME'];
-            $grid = $attrs;
-            break;
-
-         case "CLUSTER":
-#	    $cluster = $attrs;
-            $cluster_name = $attrs['NAME'];
-            break;
-
-         case "HOST":
-            $hostname = $attrs['NAME'];
-	    $index_array['cluster'][$hostname] = $cluster_name;
-
-         case "METRIC":
-            $metricname = rawurlencode($attrs['NAME']);
-	    if ( $metricname != $hostname ) 
-	      $index_array['metrics'][$metricname][] = $hostname;
-            break;
-
-         default:
-            break;
-      }
-
-}
 
 function start_cluster_summary ($parser, $tagname, $attrs)
 {
@@ -278,7 +231,7 @@ function start_host ($parser, $tagname, $attrs)
             break;
 
          case "METRIC":
-            $metricname = rawurlencode($attrs['NAME']);
+            $metricname = $attrs['NAME'];
             $metrics[$metricname] = $attrs;
             break;
 
@@ -315,18 +268,18 @@ function end_all ($parser, $tagname)
 
 function Gmetad ()
 {
-   global $conf, $error, $parsetime, $clustername, $hostname, $context, $debug;
-   
-   if ($debug) print "<br/>\n";
+   global $error, $parsetime, $clustername, $hostname, $context;
+   # From conf.php:
+   global $ganglia_ip, $ganglia_port;
+
    # Parameters are optionalshow
    # Defaults...
-   $ip = $conf['ganglia_ip'];
-   $port = $conf['ganglia_port'];
+   $ip = $ganglia_ip;
+   $port = $ganglia_port;
    $timeout = 3.0;
    $errstr = "";
    $errno  = "";
-   
-   //TODO: all calls to this function (in get_ganglia.php) supply 2 args.  Why do we make that optional?
+
    switch( func_num_args() )
       {
          case 2:
@@ -335,7 +288,6 @@ function Gmetad ()
             $ip = func_get_arg(0);
       }
 
-   if ($debug) print "<br/>DEBUG: Creating parser\n";
    $parser = xml_parser_create();
    switch ($context)
       {
@@ -350,10 +302,6 @@ function Gmetad ()
          case "cluster":
             xml_set_element_handler($parser, "start_cluster", "end_all");
             $request = "/$clustername";
-             break;
-         case "index_array":
-            xml_set_element_handler($parser, "start_everything", "end_all");
-            $request = "/";
              break;
          case "cluster-summary":
             xml_set_element_handler($parser, "start_cluster_summary", "end_all");
@@ -370,7 +318,6 @@ function Gmetad ()
    if (!$fp)
       {
          $error = "fsockopen error: $errstr";
-         if ($debug) print "<br/>DEBUG: $error\n";
          return FALSE;
       }
 
@@ -386,7 +333,6 @@ function Gmetad ()
          if (!$rc)
             {
                $error = "Could not sent request to gmetad: $errstr";
-               if ($debug) print "<br/>DEBUG: $error\n";
                return FALSE;
             }
       }
@@ -401,7 +347,6 @@ function Gmetad ()
                $error = sprintf("XML error: %s at %d",
                   xml_error_string(xml_get_error_code($parser)),
                   xml_get_current_line_number($parser));
-               if ($debug) print "<br/>DEBUG: $error\n";
                fclose($fp);
                return FALSE;
             }
@@ -411,7 +356,6 @@ function Gmetad ()
    $end = gettimeofday();
    $parsetime = ($end['sec'] + $end['usec']/1e6) - ($start['sec'] + $start['usec']/1e6);
 
-   if ($debug) print "<br/>DEBUG: theoretically completed gmetad parsing\n";
    return TRUE;
 }
 

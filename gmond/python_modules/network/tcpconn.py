@@ -1,4 +1,4 @@
-#/******************************************************************************
+#/*******************************************************************************
 #* Portions Copyright (C) 2007 Novell, Inc. All rights reserved.
 #*
 #* Redistribution and use in source and binary forms, with or without
@@ -30,16 +30,9 @@
 #* Author: Brad Nicholes (bnicholes novell.com)
 #******************************************************************************/
 
-import os
-
-OBSOLETE_POPEN = False
-try:
-    import subprocess
-except ImportError:
-    import popen2
-    OBSOLETE_POPEN = True
-
+import os, sys, popen2
 import threading
+import select
 import time
 
 _WorkerThread = None    #Worker thread object
@@ -67,15 +60,12 @@ def TCP_Connections(name):
     global _WorkerThread
     
     if _WorkerThread is None:
-        print 'Error: No netstat data gathering thread created for metric %s' % name
-        return 0
+        print 'Error: No netstat data gathering thread created for metric %s'%name
+        return 0;
         
     if not _WorkerThread.running and not _WorkerThread.shuttingdown:
-        try:
-            _WorkerThread.start()
-        except (AssertionError, RuntimeError):
-            pass
-
+        _WorkerThread.start()
+        
     #Read the last connection total for the state requested. The metric
     # name passed in matches the dictionary slot for the state value.
     _glock.acquire()
@@ -263,12 +253,8 @@ class NetstatThread(threading.Thread):
                 tempconns[conn] = 0
 
             #Call the netstat utility and split the output into separate lines
-            if not OBSOLETE_POPEN:
-                self.popenChild = subprocess.Popen(["netstat", '-t', '-a', '-n'], stdout=subprocess.PIPE)
-                lines = self.popenChild.communicate()[0].split('\n')
-            else:
-                self.popenChild = popen2.Popen3("netstat -t -a -n")
-                lines = self.popenChild.fromchild.readlines()
+            self.popenChild = popen2.Popen3("netstat -t -a -n")
+            lines = self.popenChild.fromchild.readlines()
 
             try:
                 self.popenChild.wait()
@@ -280,10 +266,6 @@ class NetstatThread(threading.Thread):
             # position and the state information in the tcp_state_at position. Count each 
             # occurance of each state.
             for tcp in lines:
-                # skip empty lines
-                if tcp == '':
-                    continue
-
                 line = tcp.split()
                 if line[tcp_at] == 'tcp':
                     if line[tcp_state_at] == 'ESTABLISHED':
@@ -350,13 +332,14 @@ def metric_cleanup():
 
 #This code is for debugging and unit testing    
 if __name__ == '__main__':
-    params = {'Refresh': '20'}
-    metric_init(params)
-    while True:
-        try:
+    try:
+        params = {'Refresh': '20'}
+        metric_init(params)
+        while True:
             for d in _descriptors:
                 v = d['call_back'](d['name'])
                 print 'value for %s is %u' % (d['name'],  v)
             time.sleep(5)
-        except KeyboardInterrupt:
-            os._exit(1)
+    except KeyboardInterrupt:
+        time.sleep(0.2)
+        os._exit(1)
