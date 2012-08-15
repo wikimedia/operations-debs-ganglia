@@ -49,16 +49,12 @@
 #include "apr_net.h"   /* our private network functions based on apr */
 #include "dtd.h"       /* the DTD definition for our XML */
 #include "g25_config.h" /* for converting old file formats to new */
-#include "update_pidfile.h"
+#include "daemon_init.h"
 #include "gm_scoreboard.h"
 #include "ganglia_priv.h"
 
 /* Specifies a single value metric callback */
 #define CB_NOINDEX -1
-
-/* If a bind fails, and retry_bind is true, this is the interval to sleep
-   before retry.  Specified in seconds */
-#define RETRY_BIND_DELAY 60
 
 /* When this gmond was started */
 apr_time_t started;
@@ -78,18 +74,10 @@ int deaf;
 int mute;
 /* Allow extra data boolean */
 int allow_extra_data;
-/* last time we received any data */
-apr_time_t udp_last_heard;
 /* Cluster tag boolean */
 int cluster_tag = 0;
 /* This host's location */
 char *host_location = NULL;
-/* This host name, spoofed */
-char *override_hostname = NULL;
-/* This host ip, spoofed */
-char *override_ip = NULL;
-/* Tags */
-char *tags = NULL;
 /* Boolean. Will this host received gexec requests? */
 int gexec_on = 0;
 /* This is tweakable by globals{max_udp_msg_len=...} */
@@ -98,8 +86,6 @@ int max_udp_message_len = 1472;
 extern char *default_gmond_configuration;
 /* The number of seconds to hold "dead" hosts in the hosts hash */
 int host_dmax = 0;
-/* The number of seconds to wait for a message before considering it down */
-int host_tmax = 20;
 /* The amount of time between cleanups */
 int cleanup_threshold = 300;
 /* Time interval before send another metadata packet */
@@ -156,14 +142,29 @@ apr_socket_t **udp_recv_sockets = NULL;
 
 /* The hash to hold the hosts (key = host IP) */
 apr_hash_t *hosts = NULL;
+
 /* The "hosts" hash contains values of type "hostdata" */
-
-#ifdef SFLOW
-#include "sflow.h"
-uint16_t sflow_udp_port = SFLOW_IANA_REGISTERED_PORT;
-#endif
-
-#include "gmond_internal.h"
+struct Ganglia_host {
+  /* Name of the host */
+  char *hostname;
+  /* The IP of this host */
+  char *ip;
+  /* The location of this host */
+  char *location;
+  /* Timestamp of when the remote host gmond started */
+  unsigned int gmond_started;
+  /* The pool used to malloc memory for this host */
+  apr_pool_t *pool;
+  /* A hash containing the full metric data from the host */
+  apr_hash_t *metrics;
+  /* A hash containing the last data update from the host */
+  apr_hash_t *gmetrics;
+  /* First heard from */
+  apr_time_t first_heard_from;
+  /* Last heard from */
+  apr_time_t last_heard_from;
+};
+typedef struct Ganglia_host Ganglia_host;
 
 /* This is the structure of the data save to each host->metric hash */
 struct Ganglia_metadata {
@@ -217,34 +218,10 @@ typedef struct Ganglia_collection_group Ganglia_collection_group;
 apr_array_header_t *collection_groups = NULL;
 
 mmodule *metric_modules = NULL;
-extern int daemon_proc; /* defined in error.c */
+extern int daemon_proc;     /* defined in error.c */
 
 char **gmond_argv;
 extern char **environ;
-
-/* apr_socket_send can't assure all characters in buf been sent. */
-static apr_status_t
-socket_send(apr_socket_t *sock, const char *buf, apr_size_t *len)
-{
-  apr_size_t total = *len;
-  apr_size_t thisTime = total;
-  const char* p = buf;
-  apr_status_t ret;
-  for(ret=apr_socket_send(sock, p, &thisTime); ret == APR_SUCCESS;
-          ret=apr_socket_send(sock, p, &thisTime)) 
-    {
-
-      if(thisTime < total) 
-        {
-          total -= thisTime;
-          p += thisTime;
-          thisTime = total;
-        }
-      else
-          break;
-    }
-  return ret;
-}
 
 /* Reload the Ganglia configuration */
 void
@@ -277,6 +254,31 @@ reload_ganglia_configuration(void)
   exit(1);
 }
 
+/* apr_socket_send can't assure all characters in buf been sent. */
+static apr_status_t
+socket_send(apr_socket_t *sock, const char *buf, apr_size_t *len)
+{
+  apr_size_t total = *len;
+  apr_size_t thisTime = total;
+  const char* p = buf;
+  apr_status_t ret;
+  for(ret=apr_socket_send(sock, p, &thisTime); ret == APR_SUCCESS;
+          ret=apr_socket_send(sock, p, &thisTime)) 
+    {
+
+      if(thisTime < total) 
+        {
+          total -= thisTime;
+          p += thisTime;
+          thisTime = total;
+        }
+      else
+          break;
+    }
+  return ret;
+}
+
+
 /* this is just a temporary function */
 void
 process_configuration_file(void)
@@ -294,20 +296,12 @@ process_configuration_file(void)
   gexec_on            = cfg_getbool(tmp, "gexec");
   /* Get the host dmax ... */
   host_dmax           = cfg_getint( tmp, "host_dmax");
-  /* Get the host tmax ... */
-  host_tmax           = cfg_getint( tmp, "host_tmax");
   /* Get the cleanup threshold */
   cleanup_threshold   = cfg_getint( tmp, "cleanup_threshold");
   /* Get the send meta data packet interval */
   send_metadata_interval = cfg_getint( tmp, "send_metadata_interval");
   /* Get the DSO module dir */
   module_dir = cfg_getstr(tmp, "module_dir");
-  /* Acquire spoof name/ip, if they are specified */
-  override_hostname = cfg_getstr(tmp, "override_hostname");
-  override_ip = cfg_getstr(tmp, "override_ip");
-
-  /* Any tags for this host */
-  tags = cfg_getstr(tmp, "tags");
 
   /* Commandline for debug_level trumps configuration file behaviour ... */
   if (args_info.debug_given) 
@@ -553,32 +547,6 @@ get_sock_family( char *family )
 }
 
 static void
-reset_mcast_channels( void )
-{
-  int i;
-  int num_udp_recv_channels   = cfg_size( config_file, "udp_recv_channel");
-
-  for(i = 0; i< num_udp_recv_channels; i++)
-    {
-      cfg_t *udp_recv_channel;
-      char *mcast_join, *mcast_if;
-      int port;
-      apr_socket_t *socket = NULL;
-
-      udp_recv_channel = cfg_getnsec( config_file, "udp_recv_channel", i);
-      mcast_join     = cfg_getstr( udp_recv_channel, "mcast_join" );
-      mcast_if       = cfg_getstr( udp_recv_channel, "mcast_if" );
-      port           = cfg_getint( udp_recv_channel, "port");
-
-      if ( mcast_join )
-        {
-          socket = udp_recv_sockets[i];
-          join_mcast(global_context, socket, mcast_join, port, mcast_if);
-        }
-    }
-}
-
-static void
 setup_listen_channels_pollset( void )
 {
   apr_status_t status;
@@ -589,13 +557,6 @@ setup_listen_channels_pollset( void )
   Ganglia_channel *channel;
   int pollset_opts = 0;
 
-  /* check if gmond was really meant to be deaf */
-  if (total_listen_channels == 0)
-    {
-      deaf = 1;
-      return;
-    }
-
   /* Create my incoming pollset */
 #ifdef LINUX
   struct utsname _name;
@@ -605,28 +566,31 @@ setup_listen_channels_pollset( void )
   }
 #endif
   if((status = apr_pollset_create(&listen_channels, total_listen_channels, global_context, pollset_opts)) != APR_SUCCESS)
+  {
+    char apr_err[512];
+    apr_strerror(status, apr_err, 511);
+    err_msg("apr_pollset_create failed: %s", apr_err);
+    exit(1);
+  }
+
+  if((udp_recv_sockets = (apr_socket_t **)apr_pcalloc(global_context, sizeof(apr_socket_t *) * (num_udp_recv_channels + 1))) == NULL)
     {
       char apr_err[512];
       apr_strerror(status, apr_err, 511);
-      err_msg("apr_pollset_create failed: %s", apr_err);
+      err_msg("apr_pcalloc failed: %s", apr_err);
       exit(1);
     }
-
-  if((udp_recv_sockets = (apr_socket_t **)apr_pcalloc(global_context, sizeof(apr_socket_t *) * (num_udp_recv_channels + 1))) == NULL)
-    err_quit("unable to allocate UDP listening sockets");
 
   /* Process all the udp_recv_channels */
   for(i = 0; i< num_udp_recv_channels; i++)
     {
       cfg_t *udp_recv_channel;
       char *mcast_join, *mcast_if, *bindaddr, *family;
-      int port, retry_bind;
+      int port;
       apr_socket_t *socket = NULL;
       apr_pollfd_t socket_pollfd;
       apr_pool_t *pool = NULL;
       int32_t sock_family = APR_INET;
-      apr_int32_t rx_buf_sz;
-      socklen_t _optlen;
 
       udp_recv_channel = cfg_getnsec( config_file, "udp_recv_channel", i);
       mcast_join     = cfg_getstr( udp_recv_channel, "mcast_join" );
@@ -634,13 +598,11 @@ setup_listen_channels_pollset( void )
       port           = cfg_getint( udp_recv_channel, "port");
       bindaddr       = cfg_getstr( udp_recv_channel, "bind");
       family         = cfg_getstr( udp_recv_channel, "family");
-      retry_bind     = cfg_getbool( udp_recv_channel, "retry_bind");
 
       debug_msg("udp_recv_channel mcast_join=%s mcast_if=%s port=%d bind=%s",
                 mcast_join? mcast_join:"NULL", 
                 mcast_if? mcast_if:"NULL", port,
                 bindaddr? bindaddr: "NULL");
-
 
       /* Create a sub-pool for this channel */
       apr_pool_create(&pool, global_context);
@@ -651,59 +613,24 @@ setup_listen_channels_pollset( void )
         {
           /* Listen on the specified multicast channel */
           socket = create_mcast_server(pool, sock_family, mcast_join, port, bindaddr, mcast_if );
-
-          while(!socket)
+          if(!socket)
             {
-              if(retry_bind == cfg_false)
-                {
-                  err_msg("Error creating multicast server mcast_join=%s port=%d mcast_if=%s family='%s'. Try setting retry_bind.  Exiting.\n",
+              err_msg("Error creating multicast server mcast_join=%s port=%d mcast_if=%s family='%s'. Exiting.\n",
                   mcast_join? mcast_join: "NULL", port, mcast_if? mcast_if:"NULL",family);
-                  exit(1);
-                }
-              err_msg("Error creating multicast server mcast_join=%s port=%d mcast_if=%s family='%s'.  Will try again...\n",
-                  mcast_join? mcast_join: "NULL", port, mcast_if? mcast_if:"NULL",family);
-              apr_sleep(APR_USEC_PER_SEC * RETRY_BIND_DELAY);
-              socket = create_mcast_server(pool, sock_family, mcast_join, port, bindaddr, mcast_if );
+              exit(1);
             }
         }
       else
         {
           /* Create a UDP server */
           socket = create_udp_server( pool, sock_family, port, bindaddr );
-          while(!socket)
+          if(!socket)
             {
-              if(retry_bind == cfg_false)
-                {
-                  err_msg("Error creating UDP server on port %d bind=%s.  Try setting retry_bind.  Exiting.\n",
-                    port, bindaddr? bindaddr: "unspecified");
-                  exit(1);
-                }
-              err_msg("Error creating UDP server on port %d bind=%s.  Will try again...\n",
+              err_msg("Error creating UDP server on port %d bind=%s. Exiting.\n",
                   port, bindaddr? bindaddr: "unspecified");
-              apr_sleep(APR_USEC_PER_SEC * RETRY_BIND_DELAY);
-              socket = create_udp_server( pool, sock_family, port, bindaddr );
+              exit(1);
             }
         }
-
-      /* Find out about the RX socket buffer 
-         This is logged to help people troubleshoot
-         Some users have observed messages about errors when sending 
-         or receiving metric packets, and a small buffer size 
-         could be an issue */
-      if(apr_socket_opt_get(socket, APR_SO_RCVBUF, &rx_buf_sz) == APR_SUCCESS)
-        {
-          debug_msg("socket created, APR_SO_RCVBUF = %d\n", rx_buf_sz);
-        }
-      else
-        err_msg("apr_socket_opt_get APR_SO_RCVBUF failed\n");
-      _optlen = sizeof(rx_buf_sz);
-      if(getsockopt(get_apr_os_socket(socket), SOL_SOCKET, SO_RCVBUF,
-                      &rx_buf_sz, &_optlen) == 0)
-        {
-          debug_msg("socket created, SO_RCVBUF = %d\n", rx_buf_sz);
-        }
-      else
-        err_msg("getsockopt SO_RCVBUF failed\n");
 
       /* Build the socket poll file descriptor structure */
       socket_pollfd.desc_type   = APR_POLL_SOCKET;
@@ -741,8 +668,13 @@ setup_listen_channels_pollset( void )
         }
     }
 
-  if ((tcp_sockets = (apr_socket_t **)apr_pcalloc(global_context, sizeof(apr_socket_t *) * (num_tcp_accept_channels + 1))) == NULL)
-    err_quit("Unable to allocate TCP listening sockets");
+  if((tcp_sockets = (apr_socket_t **)apr_pcalloc(global_context, sizeof(apr_socket_t *) * (num_tcp_accept_channels + 1))) == NULL)
+      {
+        char apr_err[512];
+        apr_strerror(status, apr_err, 511);
+        err_msg("apr_pcalloc failed: %s", apr_err);
+        exit(1);
+      }
 
   /* Process all the tcp_accept_channels */ 
   for(i=0; i< num_tcp_accept_channels; i++)
@@ -813,28 +745,6 @@ setup_listen_channels_pollset( void )
     }
 }
 
-void sanitize_metric_name(char *metric_name)
-{
-    if (metric_name == NULL) return;
-    if (strlen(metric_name) < 1) return;
-    char *p = metric_name;
-    while (p < (metric_name + strlen(metric_name))) {
-        if (
-               !(*p >= 'A' && *p <= 'Z')
-            && !(*p >= 'a' && *p <= 'z')
-            && !(*p >= '0' && *p <= '9')
-            && (*p != '_')
-            && (*p != '-')
-            && (*p != '.')
-            && (*p != '\0')
-           ) {
-            *p = '_';
-        }
-        p++;
-    }
-}
-
-
 static void
 get_metric_names (Ganglia_metric_id *metric_id, char **metricName, char **realName)
 {
@@ -847,10 +757,10 @@ get_metric_names (Ganglia_metric_id *metric_id, char **metricName, char **realNa
     if (metric_id->spoof) 
       {
         name_len = strlen(firstName);
-        buff = malloc(name_len + 1);
-        strncpy(buff, firstName, name_len + 1);
+        buff = malloc(name_len+1);
+        strcpy(buff, firstName);
         firstName = buff;
-        secondName = strchr(buff + 1, ':');
+        secondName = strchr(buff+1,':');
         if(secondName)
           {
             *secondName = 0;
@@ -870,7 +780,7 @@ get_metric_names (Ganglia_metric_id *metric_id, char **metricName, char **realNa
     return;
 }
 
-Ganglia_host *
+static Ganglia_host *
 Ganglia_host_get( char *remIP, apr_sockaddr_t *sa, Ganglia_metric_id *metric_id)
 {
   apr_status_t status;
@@ -895,12 +805,10 @@ Ganglia_host_get( char *remIP, apr_sockaddr_t *sa, Ganglia_metric_id *metric_id)
 
       spoof_info_len = strlen(metric_id->host);
       buff = malloc(spoof_info_len+1);
-      strncpy(buff, metric_id->host, spoof_info_len + 1);
+      strcpy(buff,metric_id->host);
       spoofIP = buff;
       if( !(spoofName = strchr(buff+1,':')) ){
           err_msg("Incorrect format for spoof argument. exiting.\n");
-          if (spoofIP) debug_msg("spoofIP: %s \n",spoofIP);
-          if (buff) debug_msg("buff: %s \n",buff);
           if (buff) free(buff);
           return NULL;
       }
@@ -996,7 +904,7 @@ Ganglia_host_get( char *remIP, apr_sockaddr_t *sa, Ganglia_metric_id *metric_id)
   return hostdata;
 }
 
-void
+static void
 Ganglia_update_vidals( Ganglia_host *host, Ganglia_value_msg *vmsg)
 {
     char *metricName=NULL, *realName=NULL;
@@ -1043,7 +951,7 @@ Ganglia_update_vidals( Ganglia_host *host, Ganglia_value_msg *vmsg)
     return;
 }
 
-void
+static void
 Ganglia_metadata_check(Ganglia_host *host, Ganglia_value_msg *vmsg )
 {
     char *metric_name = vmsg->Ganglia_value_msg_u.gstr.metric_id.name;
@@ -1096,11 +1004,10 @@ Ganglia_metadata_free( Ganglia_metadata *metric )
 }
 #endif
 
-void
+static void
 Ganglia_metadata_save( Ganglia_host *host, Ganglia_metadata_msg *message )
 {
     /* Search for the Ganglia_metadata in the Ganglia_host */
-    sanitize_metric_name(message->Ganglia_metadata_msg_u.gfull.metric_id.name);
     Ganglia_metadata *metric = 
         (Ganglia_metadata *)apr_hash_get(host->metrics, 
                                          message->Ganglia_metadata_msg_u.gfull.metric_id.name,
@@ -1188,10 +1095,11 @@ Ganglia_metadata_request( Ganglia_host *host, Ganglia_metadata_msg *message )
   char *name = message->Ganglia_metadata_msg_u.grequest.metric_id.name;
   Ganglia_metric_callback *metric_cb;
   int is_spoof_msg = message->Ganglia_metadata_msg_u.grequest.metric_id.spoof;
-  char srch_name[512];
 
   if(is_spoof_msg)
     {
+      char srch_name[512];
+
       apr_snprintf(srch_name, 512, "%s:%s", name, host->hostname);
       metric_cb =  (Ganglia_metric_callback *)apr_hash_get( metric_callbacks, srch_name, APR_HASH_KEY_STRING );
     }
@@ -1208,7 +1116,7 @@ Ganglia_metadata_request( Ganglia_host *host, Ganglia_metadata_msg *message )
   debug_msg("setting metadata request flag for metric: %s host: %s", name, host->hostname);
 }
 
-void
+static void
 Ganglia_value_save( Ganglia_host *host, Ganglia_value_msg *message )
 {
     /* Search for the Ganglia_metric in the Ganglia_host */
@@ -1247,7 +1155,7 @@ Ganglia_value_save( Ganglia_host *host, Ganglia_value_msg *message )
        * since the xdr_free below will blast the value later (along with the other
        * allocated structure elements).  This is only performed once at gmetric creation */
       metric->name = apr_pstrdup(host->pool, message->Ganglia_value_msg_u.gstr.metric_id.name );
-      debug_msg("***Allocating value packet for host--%s-- and metric --%s-- ****\n", message->Ganglia_value_msg_u.gstr.metric_id.host, metric->name);
+      debug_msg("***Allocating value packet for host--%s-- and metric --%s-- ****\n", host->hostname, metric->name);
     }
 
 
@@ -1306,16 +1214,13 @@ Ganglia_value_save( Ganglia_host *host, Ganglia_value_msg *message )
     }
 }
 
+
 static void
 process_udp_recv_channel(const apr_pollfd_t *desc, apr_time_t now)
 {
   apr_status_t status;
   apr_socket_t *socket;
   apr_sockaddr_t *remotesa = NULL;
-#ifdef SFLOW
-  uint16_t localport;
-  char *errorMsg = NULL;
-#endif
   char  remoteip[256];
   char buf[max_udp_message_len];
   apr_size_t len = max_udp_message_len;
@@ -1339,10 +1244,6 @@ process_udp_recv_channel(const apr_pollfd_t *desc, apr_time_t now)
      type socket is connectionless. */
   apr_pool_create(&p, global_context);
   status = apr_socket_addr_get(&remotesa, APR_LOCAL, socket);
-#ifdef SFLOW
-  /* remember this before it gets overwritten */
-  localport = remotesa->port;
-#endif
   status = apr_sockaddr_info_get(&remotesa, NULL, remotesa->family, remotesa->port, 0, p);
 
   /* Grab the data */
@@ -1367,22 +1268,6 @@ process_udp_recv_channel(const apr_pollfd_t *desc, apr_time_t now)
 
   ganglia_scoreboard_inc(PKTS_RECVD_ALL);
 
-#ifdef SFLOW
-  if(localport == sflow_udp_port) {
-    if(process_sflow_datagram(remotesa, buf, len, now, &errorMsg)) {
-      ganglia_scoreboard_inc(PKTS_RECVD_VALUE);
-    }
-    else {
-      if(errorMsg) {
-	debug_msg("sFlow error: %s", errorMsg);
-      }
-      ganglia_scoreboard_inc(PKTS_RECVD_FAILED);
-    }
-    apr_pool_destroy(p);
-    return;
-  }
-#endif
-
   /* Create the XDR receive stream */
   xdrmem_create(&x, buf, max_udp_message_len, XDR_DECODE);
 
@@ -1403,7 +1288,6 @@ process_udp_recv_channel(const apr_pollfd_t *desc, apr_time_t now)
       ret = xdr_Ganglia_metadata_msg(&x, &fmsg);
       if (ret)
           hostdata = Ganglia_host_get(remoteip, remotesa, &(fmsg.Ganglia_metadata_msg_u.grequest.metric_id));
-      sanitize_metric_name(fmsg.Ganglia_metadata_msg_u.grequest.metric_id.name);
       if(!ret || !hostdata)
         {
           ganglia_scoreboard_inc(PKTS_RECVD_FAILED);
@@ -1420,7 +1304,6 @@ process_udp_recv_channel(const apr_pollfd_t *desc, apr_time_t now)
       ret = xdr_Ganglia_metadata_msg(&x, &fmsg);
       if (ret)
           hostdata = Ganglia_host_get(remoteip, remotesa, &(fmsg.Ganglia_metadata_msg_u.gfull.metric_id));
-      sanitize_metric_name(fmsg.Ganglia_metadata_msg_u.gfull.metric_id.name);
       if(!ret || !hostdata)
         {
           ganglia_scoreboard_inc(PKTS_RECVD_FAILED);
@@ -1443,7 +1326,6 @@ process_udp_recv_channel(const apr_pollfd_t *desc, apr_time_t now)
       ret = xdr_Ganglia_value_msg(&x, &vmsg);
       if (ret)
           hostdata = Ganglia_host_get(remoteip, remotesa, &(vmsg.Ganglia_value_msg_u.gstr.metric_id));
-      sanitize_metric_name(vmsg.Ganglia_value_msg_u.gstr.metric_id.name);
       if(!ret || !hostdata)
         {
           ganglia_scoreboard_inc(PKTS_RECVD_FAILED);
@@ -1552,13 +1434,12 @@ print_host_start( apr_socket_t *client, Ganglia_host *hostinfo)
   int tn = (now - hostinfo->last_heard_from) / APR_USEC_PER_SEC;
 
   len = apr_snprintf(hostxml, 1024, 
-           "<HOST NAME=\"%s\" IP=\"%s\" TAGS=\"%s\" REPORTED=\"%d\" TN=\"%d\" TMAX=\"%d\" DMAX=\"%d\" LOCATION=\"%s\" GMOND_STARTED=\"%d\">\n",
+           "<HOST NAME=\"%s\" IP=\"%s\" REPORTED=\"%d\" TN=\"%d\" TMAX=\"%d\" DMAX=\"%d\" LOCATION=\"%s\" GMOND_STARTED=\"%d\">\n",
                      hostinfo->hostname, 
-                     hostinfo->ip,
-                     tags ? tags : "",
+                     hostinfo->ip, 
                      (int)(hostinfo->last_heard_from / APR_USEC_PER_SEC),
                      tn,
-                     host_tmax,
+                     20, /*tmax for now is always 20 */
                      host_dmax,
                      hostinfo->location? hostinfo->location: "unspecified", 
                      hostinfo->gmond_started);
@@ -1666,11 +1547,11 @@ gmetric_value_to_str(Ganglia_value_msg *message)
     case gmetric_double:
       apr_snprintf(value, 1024, message->Ganglia_value_msg_u.gd.fmt, message->Ganglia_value_msg_u.gd.d);
       return value;
-    case gmetadata_full: 
-    case gmetadata_request: 
     default:
       return "unknown";
     }
+
+  return "unknown";
 }
 
 static apr_status_t
@@ -1694,14 +1575,13 @@ print_host_metric( apr_socket_t *client, Ganglia_metadata *data, Ganglia_metadat
     }
   
   len = apr_snprintf(metricxml, 1024,
-          "<METRIC NAME=\"%s\" VAL=\"%s\" TYPE=\"%s\" UNITS=\"%s\" TN=\"%d\" TMAX=\"%d\" DMAX=\"%d\" SLOPE=\"%s\">\n",
+          "<METRIC NAME=\"%s\" VAL=\"%s\" TYPE=\"%s\" UNITS=\"%s\" TN=\"%d\" TMAX=\"%d\" DMAX=\"0\" SLOPE=\"%s\">\n",
               metricName,
               gmetric_value_to_str(&(val->message_u.v_message)),
               data->message_u.f_message.Ganglia_metadata_msg_u.gfull.metric.type,
               data->message_u.f_message.Ganglia_metadata_msg_u.gfull.metric.units,
               (int)((now - val->last_heard_from) / APR_USEC_PER_SEC),
               data->message_u.f_message.Ganglia_metadata_msg_u.gfull.metric.tmax,
-              data->message_u.f_message.Ganglia_metadata_msg_u.gfull.metric.dmax,
               slope_to_cstr(data->message_u.f_message.Ganglia_metadata_msg_u.gfull.metric.slope));
 
   if (metricName) free(metricName);
@@ -1838,12 +1718,8 @@ poll_listen_channels( apr_interval_time_t timeout, apr_time_t now)
 
   /* Poll for incoming data */
   status = apr_pollset_poll(listen_channels, timeout, &num, &descs);
-  if (status != APR_SUCCESS && status != APR_TIMEUP) {
-      char buff[128];
-      debug_msg("apr_pollset_poll returned unexpected status %d = %s\n",
-          status, apr_strerror(status, buff, 128));
-      return;
-  }
+  if(status != APR_SUCCESS)
+    return;
 
   for(i = 0; i< num ; i++)
     {
@@ -1852,7 +1728,6 @@ poll_listen_channels( apr_interval_time_t timeout, apr_time_t now)
         {
         case UDP_RECV_CHANNEL:
           process_udp_recv_channel(descs+i, now); 
-          udp_last_heard = apr_time_now();
           break;
         case TCP_ACCEPT_CHANNEL:
           process_tcp_accept_channel(descs+i, now);
@@ -1907,9 +1782,9 @@ gexec_func ( void )
 {
    g_val_t val;
    if( gexec_on )
-      snprintf(val.str, MAX_G_STRING_SIZE, "%s", "ON");
+      snprintf(val.str, 32, "%s", "ON");
    else
-      snprintf(val.str, MAX_G_STRING_SIZE, "%s", "OFF");
+      snprintf(val.str, 32, "%s", "OFF");
    return val;
 }
 
@@ -1930,7 +1805,7 @@ location_func(void)
        cfg_t *host = cfg_getsec(config_file, "host");
        host_location = cfg_getstr( host, "location");
      }
-   snprintf(val.str, MAX_G_STRING_SIZE, "%s", host_location);
+   strncpy(val.str, host_location, 32);
    return val;
 }
 
@@ -2318,7 +2193,6 @@ setup_collection_groups( void )
                   exit (1);
                 }
 
-
               /* Create a sub-pool for this channel */
               if(apr_pool_create(&p, global_context) != APR_SUCCESS)
                 {
@@ -2622,23 +2496,8 @@ Ganglia_collection_group_send( Ganglia_collection_group *group, apr_time_t now)
                 /* no memory */
                 return;
               }
-
+        
             name = cb->msg.Ganglia_value_msg_u.gstr.metric_id.name;
-            if (override_hostname != NULL)
-              {
-#if 1
-                char* tmpstr = malloc( strlen(( override_ip != NULL ? override_ip : override_hostname )) + strlen( override_hostname ) + 1 );
-                strcpy (tmpstr, (char *)( override_ip != NULL ? override_ip : override_hostname ) );
-                strcat (tmpstr, ":");
-                strcat (tmpstr, (char *) override_hostname);
-
-                cb->msg.Ganglia_value_msg_u.gstr.metric_id.host = tmpstr;
-#endif
-#if 0
-                cb->msg.Ganglia_value_msg_u.gstr.metric_id.host = apr_pstrcat(gm_pool, (char *)( override_ip != NULL ? override_ip : override_hostname ), ":", (char *) override_hostname, NULL);
-#endif
-                cb->msg.Ganglia_value_msg_u.gstr.metric_id.spoof = TRUE;
-              }
             val = apr_pstrdup(gm_pool, host_metric_value(cb->info, &(cb->msg)));
             type = apr_pstrdup(gm_pool, host_metric_type(cb->info->type));
         
@@ -2675,14 +2534,7 @@ Ganglia_collection_group_send( Ganglia_collection_group *group, apr_time_t now)
                 debug_msg("\tsending metadata for metric: %s", cb->name);
 
                 ganglia_scoreboard_inc(PKTS_SENT_METADATA);
-                if (override_hostname != NULL)
-                  {
-                    errors = Ganglia_metadata_send_real(gmetric, udp_send_channels, cb->msg.Ganglia_value_msg_u.gstr.metric_id.host);
-                  }
-                else
-                  {
-                    errors = Ganglia_metadata_send(gmetric, udp_send_channels);
-                  }
+                errors = Ganglia_metadata_send(gmetric, udp_send_channels);
                 if (errors) 
                   {
                     err_msg("Error %d sending the modular data for %s\n", errors, cb->name);
@@ -2796,11 +2648,7 @@ print_metric_list( void )
             {
               if (strcasecmp(cb->name,  metric_info[i].name) == 0) 
                 {
-                  snprintf (modular_desc, sizeof(modular_desc),
-                            "%s (module %s)",
-                            metric_info[i].desc,
-                            cb->modp->module_name);
-
+                  sprintf (modular_desc, "%s (module %s)", metric_info[i].desc, cb->modp->module_name);
                   desc = (char*)modular_desc;
                   break;
                 }
@@ -2941,16 +2789,12 @@ main ( int argc, char *argv[] )
 
   if(args_info.default_config_flag)
     {
-      fprintf(stdout, "%s", default_gmond_configuration);
+      fprintf(stdout, default_gmond_configuration);
       fflush( stdout );
       exit(0);
     }
 
   process_configuration_file();
-
-#ifdef SFLOW
-  sflow_udp_port = init_sflow(config_file);
-#endif
 
   /* Should over-ride any value from the configuration file */
   if(args_info.location_given)
@@ -2983,7 +2827,7 @@ main ( int argc, char *argv[] )
     {
       update_pidfile (args_info.pid_file_arg);
     }
-
+  
   /* Collect my hostname */
   apr_gethostname( myname, APRMAXHOSTLEN+1, global_context);
 
@@ -3020,11 +2864,17 @@ main ( int argc, char *argv[] )
       setup_collection_groups();
     }
 
+  if(!listen_channels)
+    {
+      /* if there are no listen channels defined, we are equivalent to deaf */
+      deaf = 1;
+    }
+
   /* Create the host hash table */
   hosts = apr_hash_make( global_context );
 
   /* Initialize time variables */
-  udp_last_heard = last_cleanup = next_collection = now = apr_time_now();
+  last_cleanup = next_collection = now = apr_time_now();
 
   /* Loop */
   for(;!done;)
@@ -3049,16 +2899,6 @@ main ( int argc, char *argv[] )
 
       if(!deaf)
         {
-          /* if we went deaf, re-subscribe to the multicast channel */
-          if ((now - udp_last_heard) > 60 * APR_USEC_PER_SEC)
-            {
-              /* FIXME: maybe this should be done for the affected
-                        channel only? */
-              reset_mcast_channels();
-              /* reset the timer */
-              udp_last_heard = now;
-            }
-
           /* cleanup the data if the cleanup threshold has been met */
           if( (now - last_cleanup) > apr_time_make(cleanup_threshold,0))
             {

@@ -38,7 +38,7 @@ A full list of variables that will be used:
                                chosen from the web UI)
 
     $upper-limit     (strings: Maximum and minimum Y-value for the graph.
-    $lower-limit               RRDtool normally will auto-scale the Y min
+    $lower-limit               RRDTool normally will auto-scale the Y min
                                and max to fit the data.  You may override
                                this by setting these variables to specific
                                limits.  The default value is a null string,
@@ -65,26 +65,30 @@ function graph_sample_report ( &$rrdtool_graph ) {
  * with extra comments
  */
 
-// pull in a number of global variables, many set in conf.php (such as colors)
-// but other from elsewhere, such as get_context.php
+// pull in a number of global variables, many set in conf.php (such as colors
+// and $rrd_dir), but other from elsewhere, such as get_context.php
 
-    global $conf,
-           $context,
+    global $context,
+           $cpu_idle_color,
+           $cpu_nice_color,
+           $cpu_system_color,
+           $cpu_user_color,
+           $cpu_wio_color,
+           $hostname,
            $range,
            $rrd_dir,
-           $size;
+           $size,
+           $strip_domainname;
 
-    if ($conf['strip_domainname']) {
-       $hostname = strip_domainname($GLOBALS['hostname']);
-    } else {
-       $hostname = $GLOBALS['hostname'];
+    if ($strip_domainname) {
+       $hostname = strip_domainname($hostname);
     }
 
     //
     // You *MUST* set at least the 'title', 'vertical-label', and 'series'
     // variables otherwise, the graph *will not work*.
     //
-    $title = 'Sample';
+    $title = 'Sample CPU Report';
     if ($context != 'host') {
        //  This will be turned into: "Clustername $TITLE last $timerange",
        //  so keep it short
@@ -111,44 +115,44 @@ function graph_sample_report ( &$rrdtool_graph ) {
          * the average
          */
         $series =
-              "'DEF:num_nodes=${rrd_dir}/cpu_user.rrd:num:AVERAGE' "
-            . "'DEF:cpu_user=${rrd_dir}/cpu_user.rrd:sum:AVERAGE' "
-            . "'CDEF:ccpu_user=cpu_user,num_nodes,/' "
-            . "'DEF:cpu_nice=${rrd_dir}/cpu_nice.rrd:sum:AVERAGE' "
-            . "'CDEF:ccpu_nice=cpu_nice,num_nodes,/' "
-            . "'DEF:cpu_system=${rrd_dir}/cpu_system.rrd:sum:AVERAGE' "
-            . "'CDEF:ccpu_system=cpu_system,num_nodes,/' "
-            . "'DEF:cpu_idle=${rrd_dir}/cpu_idle.rrd:sum:AVERAGE' "
-            . "'CDEF:ccpu_idle=cpu_idle,num_nodes,/' "
-            . "'AREA:ccpu_user#${conf['cpu_user_color']}:User CPU' "
-            . "'STACK:ccpu_nice#${conf['cpu_nice_color']}:Nice CPU' "
-            . "'STACK:ccpu_system#${conf['cpu_system_color']}:System CPU' ";
+              "DEF:'num_nodes'='${rrd_dir}/cpu_user.rrd':'num':AVERAGE "
+            . "DEF:'cpu_user'='${rrd_dir}/cpu_user.rrd':'sum':AVERAGE "
+            . "CDEF:'ccpu_user'=cpu_user,num_nodes,/ "
+            . "DEF:'cpu_nice'='${rrd_dir}/cpu_nice.rrd':'sum':AVERAGE "
+            . "CDEF:'ccpu_nice'=cpu_nice,num_nodes,/ "
+            . "DEF:'cpu_system'='${rrd_dir}/cpu_system.rrd':'sum':AVERAGE "
+            . "CDEF:'ccpu_system'=cpu_system,num_nodes,/ "
+            . "DEF:'cpu_idle'='${rrd_dir}/cpu_idle.rrd':'sum':AVERAGE "
+            . "CDEF:'ccpu_idle'=cpu_idle,num_nodes,/ "
+            . "AREA:'ccpu_user'#$cpu_user_color:'User CPU' "
+            . "STACK:'ccpu_nice'#$cpu_nice_color:'Nice CPU' "
+            . "STACK:'ccpu_system'#$cpu_system_color:'System CPU' ";
 
         if (file_exists("$rrd_dir/cpu_wio.rrd")) {
-            $series .= "'DEF:cpu_wio=${rrd_dir}/cpu_wio.rrd:sum:AVERAGE' "
-                . "'CDEF:ccpu_wio=cpu_wio,num_nodes,/' "
-                . "'STACK:ccpu_wio#${conf['cpu_wio_color']}:WAIT CPU' ";
+            $series .= "DEF:'cpu_wio'='${rrd_dir}/cpu_wio.rrd':'sum':AVERAGE "
+                ."CDEF:'ccpu_wio'=cpu_wio,num_nodes,/ "
+                ."STACK:'ccpu_wio'#$cpu_wio_color:'WAIT CPU' ";
         }
 
-        $series .= "'STACK:ccpu_idle#${conf['cpu_idle_color']}:Idle CPU' ";
+        $series .= "STACK:'ccpu_idle'#$cpu_idle_color:'Idle CPU' ";
 
     } else {
 
         // Context is not "host"
-        $series ="'DEF:cpu_user=${rrd_dir}/cpu_user.rrd:sum:AVERAGE' "
-        . "'DEF:cpu_nice=${rrd_dir}/cpu_nice.rrd:sum:AVERAGE' "
-        . "'DEF:cpu_system=${rrd_dir}/cpu_system.rrd:sum:AVERAGE' "
-        . "'DEF:cpu_idle=${rrd_dir}/cpu_idle.rrd:sum:AVERAGE' "
-        . "'AREA:cpu_user#${conf['cpu_user_color']}:User CPU' "
-        . "'STACK:cpu_nice#${conf['cpu_nice_color']}:Nice CPU' "
-        . "'STACK:cpu_system#${conf['cpu_system_color']}:System CPU' ";
+        $series ="DEF:'cpu_user'='${rrd_dir}/cpu_user.rrd':'sum':AVERAGE "
+        . "DEF:'cpu_nice'='${rrd_dir}/cpu_nice.rrd':'sum':AVERAGE "
+        . "DEF:'cpu_system'='${rrd_dir}/cpu_system.rrd':'sum':AVERAGE "
+        . "DEF:'cpu_idle'='${rrd_dir}/cpu_idle.rrd':'sum':AVERAGE "
+        . "AREA:'cpu_user'#$cpu_user_color:'User CPU' "
+        . "STACK:'cpu_nice'#$cpu_nice_color:'Nice CPU' "
+        . "STACK:'cpu_system'#$cpu_system_color:'System CPU' ";
 
         if (file_exists("$rrd_dir/cpu_wio.rrd")) {
-            $series .= "'DEF:cpu_wio=${rrd_dir}/cpu_wio.rrd:sum:AVERAGE' ";
-            $series .= "'STACK:cpu_wio#${conf['cpu_wio_color']}:WAIT CPU' ";
+            $series .= "DEF:'cpu_wio'='${rrd_dir}/cpu_wio.rrd':'sum':AVERAGE ";
+            $series .= "STACK:'cpu_wio'#$cpu_wio_color:'WAIT CPU' ";
         }
 
-        $series .= "'STACK:cpu_idle#${conf['cpu_idle_color']}:Idle CPU' ";
+        $series .= "STACK:'cpu_idle'#$cpu_idle_color:'Idle CPU' ";
     }
 
     // We have everything now, so add it to the array, and go on our way.

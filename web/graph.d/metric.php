@@ -6,8 +6,9 @@
 /* Pass in by reference! */
 function graph_metric ( &$rrdtool_graph ) {
 
-    global $conf,
-           $context,
+    global $context,
+           $default_metric_color,
+           $hostname,
            $jobstart,
            $load_color,
            $max,
@@ -20,22 +21,14 @@ function graph_metric ( &$rrdtool_graph ) {
            $size,
            $summary,
            $value,
-           $vlabel;
+           $vlabel,
+           $strip_domainname;
 
-    if ($conf['strip_domainname']) {
-        $hostname = strip_domainname($GLOBALS['hostname']);
-    } else {
-        $hostname = $GLOBALS['hostname'];
+    if ($strip_domainname) {
+        $hostname = strip_domainname($hostname);
     }
 
     $rrdtool_graph['height'] += 0; //no fudge needed
-    $rrdtool_graph['extras'] = '';
-
-    if ($size == 'medium') {
-       $rrdtool_graph['extras']        .= ($conf['graphreport_stats'] == true) ? ' --font LEGEND:7' : '';
-    } else if ($size == 'large') {
-       $rrdtool_graph['extras']        .= ($conf['graphreport_stats'] == true) ? ' --font LEGEND:10' : '';
-    }
 
     switch ($context) {
 
@@ -106,55 +99,26 @@ function graph_metric ( &$rrdtool_graph ) {
         $rrdtool_graph['lower-limit'] = $min;
 
     if ($vlabel) {
-        // We should set $vlabel **even if it isn't used** for spacing
-        // and alignment reasons.  This is mostly for aesthetics.
+        // We should set $vlabel, even if it isn't used for spacing
+        // and alignment reasons.  This is mostly for aesthetics
         $temp_vlabel = trim($vlabel);
         $rrdtool_graph['vertical-label'] = strlen($temp_vlabel)
                    ?  $temp_vlabel
                    :  ' ';
     } else {
-        $rrdtool_graph['vertical-label'] = $metricname;
+        $rrdtool_graph['vertical-label'] = ' ';
     }
 
     //# the actual graph...
     $series  = "DEF:'sum'='$rrd_dir/$metricname.rrd:sum':AVERAGE ";
-    $series .= "AREA:'sum'#${conf['default_metric_color']}:'$subtitle_one   '";
-
-    if ($conf['graphreport_stats'] == false) {
-        $series .= ":STACK: COMMENT:'$subtitle_two\\l'";
-    }
-    $series .= " ";
-
-    if ($size == 'small') {
-        $eol2        = '\\l';
-    } else {
-        $eol2        = '';
-    }
-
-    if($conf['graphreport_stats'] == true) {
-
-        $series .= "CDEF:sum_pos=sum,0,LT,0,sum,IF "
-                . "VDEF:sum_last=sum_pos,LAST "
-                . "VDEF:sum_min=sum_pos,MINIMUM "
-                . "VDEF:sum_avg=sum_pos,AVERAGE "
-                . "VDEF:sum_max=sum_pos,MAXIMUM "
-                . "GPRINT:'sum_last':'Now\:%7.2lf%s' "
-                . "GPRINT:'sum_min':'Min\:%7.2lf%s${eol2}' "
-                . "GPRINT:'sum_avg':'Avg\:%7.2lf%s' "
-                . "GPRINT:'sum_max':'Max\:%7.2lf%s\\l' ";
-    }
+    $series .= "AREA:'sum'#$default_metric_color:'$subtitle_one'";
+    $series .= ":STACK: COMMENT:'$subtitle_two'";
 
     if ($jobstart) {
-        $series .= "VRULE:$jobstart#${conf['jobstart_color']} ";
+        $series .= "VRULE:$jobstart#$jobstart_color ";
     }
 
-    // If metric is not present we are likely not collecting it on this
-    // host therefore we should not attempt to build anything and will likely end up with a broken
-    // image. To avoid that we'll make an empty image
-    if ( !file_exists("$rrd_dir/$metricname.rrd") ) 
-      $rrdtool_graph[ 'series' ] = 'HRULE:1#FFCC33:"No matching metrics detected"';   
-    else
-      $rrdtool_graph[ 'series' ] = $series;
+    $rrdtool_graph['series'] = $series;
 
     return $rrdtool_graph;
 

@@ -1,2 +1,2 @@
-pys = example.py spfexample.py
+pys = example.py
 EXTRA_DIST = $(pys)

@@ -1,3 +1,4 @@
+/* $Id$ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/poll.h>
@@ -78,10 +79,6 @@ data_thread ( void *arg )
                    {
                      d->last_good_index = i;
                      break;
-                   }
-                 else
-                   {
-                     err_msg("data_thread() for [%s] failed to contact node %s", d->name, d->sources[i]->name);
                    }
                }
            }

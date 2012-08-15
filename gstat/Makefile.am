@@ -15,6 +15,3 @@ gstat_LDADD   = $(top_builddir)/lib/libganglia.la \
                 $(GLDADD)
 
 gstat_LDFLAGS = $(GLDFLAGS)
-
-EXTRA_DIST = cmdline.sh
-
