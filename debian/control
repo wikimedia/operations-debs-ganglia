@@ -5,7 +5,6 @@ Maintainer: Stuart Teasdale <sdt@debian.org>
 Uploaders: Daniel Pocock <daniel@pocock.com.au>
 Homepage: http://www.ganglia.info/
 Build-Depends: debhelper (>> 5.0.0), librrd2-dev, autoconf, autotools-dev, automake, libapr1-dev, libexpat1-dev, python-dev, libconfuse-dev, po-debconf, libxml2-dev, libdbi0-dev, libpcre3-dev, gperf, libtool, rsync
-DM-Upload-Allowed: yes
 Standards-Version: 3.8.4
 Vcs-Git: git://git.debian.org/collab-maint/ganglia.git
 Vcs-Browser: http://git.debian.org/?p=collab-maint/ganglia.git;a=summary
