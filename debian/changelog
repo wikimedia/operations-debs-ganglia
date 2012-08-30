@@ -10,6 +10,7 @@ ganglia (3.3.8-1) unstable; urgency=low
   * Add DM-Upload-Allowed
   * Add VCS URLs to control file.
   * PO translation didn't get into the package properly.
+  * Stop deleting web/version.php during clean as it comes from upstream
 
  -- Daniel Pocock <daniel@pocock.com.au>  Mon, 13 Aug 2012 15:17:28 +0200
 
