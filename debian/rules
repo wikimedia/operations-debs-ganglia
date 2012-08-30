@@ -36,7 +36,7 @@ config.status: configure
 		--libdir=\$${prefix}/lib \
 		--sysconfdir=/etc/ganglia \
 		--infodir=\$${prefix}/share/info --enable-shared \
-		--with-gmetad  
+		--with-gmetad
 build: build-stamp
 	make -C web
 
@@ -52,7 +52,7 @@ build-stamp:  config.status
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp 
+	rm -f build-stamp
 
 	# Add here commands to clean up after the build process.
 	[ ! -f Makefile ] || $(MAKE) distclean
@@ -72,7 +72,7 @@ install: build
 	dh_testroot
 	dh_clean -k
 	dh_installdirs
-	
+
 	# Add here commands to install the package into debian/ganglia.
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
 
@@ -116,16 +116,16 @@ binary-indep: build install
 	dh_gencontrol -i
 	dh_md5sums -i
 	dh_builddeb -i
-	
+
 
 # Build architecture-dependent files here.
 binary-arch: build install
 	dh_testdir
 	dh_testroot
-#	dh_installdebconf	
-	dh_installdocs -pganglia-monitor -Xlibganglia 
-	dh_installdocs -plibganglia1-dev 
-	dh_installdocs -plibganglia1 
+#	dh_installdebconf
+	dh_installdocs -pganglia-monitor -Xlibganglia
+	dh_installdocs -plibganglia1-dev
+	dh_installdocs -plibganglia1
 	dh_installdocs -pgmetad
 	cp $(CURDIR)/gmetad/gmetad.conf $(CURDIR)/debian/gmetad/etc/ganglia
 	cp $(CURDIR)/debian/gmond.conf $(CURDIR)/debian/ganglia-monitor/etc/ganglia
@@ -150,4 +150,4 @@ binary-arch: build install
 	dh_builddeb -s
 
 binary: binary-indep binary-arch
-.PHONY: build clean binary-indep binary-arch binary install 
+.PHONY: build clean binary-indep binary-arch binary install

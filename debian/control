@@ -13,7 +13,7 @@ Package: ganglia-monitor
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, adduser, libganglia1 (=${binary:Version})
 Description: cluster monitoring toolkit - node daemon
- Ganglia is a scalable, real-time cluster monitoring environment 
+ Ganglia is a scalable, real-time cluster monitoring environment
  that collects cluster statistics in an open and well-defined XML format.
  .
  This package contains the monitor core program.
@@ -22,7 +22,7 @@ Package: ganglia-monitor-python
 Architecture: all
 Depends: ${misc:Depends}, ${shlibs:Depends}, python, ganglia-monitor (>= ${binary:Version})
 Description: cluster monitoring toolkit - python modules
- Ganglia is a scalable, real-time cluster monitoring environment 
+ Ganglia is a scalable, real-time cluster monitoring environment
  that collects cluster statistics in an open and well-defined XML format.
  .
  This package contains the monitor core python plugins.
@@ -32,7 +32,7 @@ Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, adduser, libganglia1 (=${binary:Version})
 Suggests: ganglia-monitor, ganglia-webfrontend
 Description: cluster monitoring toolkit - Ganglia Meta-Daemon
- Ganglia is a scalable, real-time cluster monitoring environment 
+ Ganglia is a scalable, real-time cluster monitoring environment
  that collects cluster statistics in an open and well-defined XML format.
  .
  This package contains the 'gmetad' daemon, which collects information from
@@ -43,7 +43,7 @@ Architecture: any
 Section: libs
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: cluster monitoring toolkit - shared libraries
- Ganglia is a scalable, real-time cluster monitoring environment 
+ Ganglia is a scalable, real-time cluster monitoring environment
  that collects cluster statistics in an open and well-defined XML format.
  .
  This package contains shared libraries.
@@ -53,7 +53,7 @@ Architecture: any
 Section: libdevel
 Depends: ${misc:Depends}, libganglia1 (=${binary:Version}), ${shlibs:Depends}
 Description: cluster monitoring toolkit - development libraries
- Ganglia is a scalable, real-time cluster monitoring environment 
+ Ganglia is a scalable, real-time cluster monitoring environment
  that collects cluster statistics in an open and well-defined XML format.
  .
  This package contains development libraries.
