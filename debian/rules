@@ -29,7 +29,7 @@ config.status: configure
 	# Intermittent errors about missing Tpo files appear during
 	# the build, many people have suggested running autoreconf
 	# before a build can avert that:
-	#autoreconf --install && (cd libmetrics && autoreconf --install)
+	autoreconf --install && (cd libmetrics && autoreconf --install)
 	#chmod +x configure libmetrics/configure
 	./configure CFLAGS="$(CFLAGS)" CPPFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) \
 		--prefix=/usr --mandir=\$${prefix}/share/man \
