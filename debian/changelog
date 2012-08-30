@@ -8,14 +8,9 @@ ganglia (3.3.8-1) unstable; urgency=low
   * Extra logging of buffer sizes for troubleshooting a common problem
   * Add Daniel Pocock as uploader (Debian Maintainer)
   * Add VCS URLs to control file.
-
- -- Daniel Pocock <daniel@pocock.com.au>  Mon, 13 Aug 2012 15:17:28 +0200
-
-ganglia (3.3.5-3) unstable; urgency=low
-
   * PO translation didn't get into the package properly.
 
- -- Stuart Teasdale <sdt@debian.org>  Mon, 09 Apr 2012 11:37:12 +0100
+ -- Daniel Pocock <daniel@pocock.com.au>  Mon, 13 Aug 2012 15:17:28 +0200
 
 ganglia (3.3.5-2) unstable; urgency=low
 
