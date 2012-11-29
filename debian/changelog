@@ -1,3 +1,9 @@
+ganglia (3.3.8-2) UNRELEASED; urgency=low
+
+  * Add a debian/watch file.
+
+ -- Mario Lang <mlang@debian.org>  Thu, 29 Nov 2012 09:32:58 +0100
+
 ganglia (3.3.8-1) unstable; urgency=low
 
   * Check URL arguments thoroughly (Closes: #683584)
