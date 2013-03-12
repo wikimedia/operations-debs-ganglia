@@ -1,3 +1,10 @@
+ganglia (3.5.0-wm1) precise; urgency=low
+
+  * Imported Upstream version 3.5.0
+  * Applied diff by Nicholas Satterly
+
+ -- Mark Bergsma <mark@wikimedia.org>  Tue, 12 Mar 2013 14:44:37 +0000
+
 ganglia (3.3.8-2) UNRELEASED; urgency=low
 
   * Add a debian/watch file.

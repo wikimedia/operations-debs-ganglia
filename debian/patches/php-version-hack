@@ -1,0 +1,39 @@
+Description: php-version-hack
+ TODO: Put a short summary on the line above and replace this paragraph
+ with a longer explanation of this change. Complete the meta-information
+ with other relevant fields (see below for details). To make it easier, the
+ information below has been extracted from the changelog. Adjust it or drop
+ it.
+ .
+ ganglia (3.5.0-1) UNRELEASED; urgency=low
+ .
+   * New upstream release
+Author: Nick Satterly <nick.satterly at guardian.co.uk>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: http://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- ganglia-3.5.0.orig/configure.in
++++ ganglia-3.5.0/configure.in
+@@ -422,10 +422,7 @@ if test x"$enable_php" = xyes; then
+   if test -n "$PHP_CONFIG_BIN"; then
+     # find out php version
+     PHP_FULL_VERSION=`$PHP_CONFIG_BIN --version`
+-    AC_CACHE_CHECK([PHP version >= 5.3], [php_cv_version_5],
+-        [AX_COMPARE_VERSION([$PHP_FULL_VERSION], [ge], [5.3],
+-            [php_cv_version_5="yes"],
+-            [php_cv_version_5="no"])])
++    php_cv_version_5="yes"
+     if test "$php_cv_version_5" = "yes"; then
+         PHP_VERSION=5
+     else
