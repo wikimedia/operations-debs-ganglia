@@ -37,7 +37,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "file.h"
+#include "gm_file.h"
 #include "libmetrics.h"
 
 #include <apr_tables.h>
@@ -49,19 +49,7 @@
  */
 mmodule multicpu_module;
 
-/* Never changes */
-#ifndef BUFFSIZE
-#define BUFFSIZE 16384
-#endif
-
-typedef struct {
-  struct timeval last_read;
-  float thresh;
-  char *name;
-  char buffer[BUFFSIZE];
-} timely_file;
-
-static timely_file proc_stat    = { {0,0} , 1., "/proc/stat" };
+static timely_file proc_stat    = { {0,0} , 1., "/proc/stat", NULL, BUFFSIZE };
 
 struct cpu_util {
    g_val_t val;
@@ -87,36 +75,7 @@ static cpu_util *cpu_idle = NULL;
 static cpu_util *cpu_wio = NULL;
 static cpu_util *cpu_intr = NULL;
 static cpu_util *cpu_sintr = NULL;
-
-float timediff(const struct timeval *thistime, const struct timeval *lasttime)
-{
-  float diff;
-
-  diff = ((double) thistime->tv_sec * 1.0e6 +
-          (double) thistime->tv_usec -
-          (double) lasttime->tv_sec * 1.0e6 -
-          (double) lasttime->tv_usec) / 1.0e6;
-
-  return diff;
-}
-
-static char *update_file(timely_file *tf)
-{
-    int rval;
-    struct timeval now;
-    gettimeofday(&now, NULL);
-    if(timediff(&now,&tf->last_read) > tf->thresh) {
-        rval = slurpfile(tf->name, tf->buffer, BUFFSIZE);
-        if(rval == SYNAPSE_FAILURE) {
-            err_msg("update_file() got an error from slurpfile() reading %s",
-                    tf->name);
-            return (char *)SYNAPSE_FAILURE;
-        }
-        else 
-            tf->last_read = now;
-    }
-    return tf->buffer;
-}
+static cpu_util *cpu_steal = NULL;
 
 /*
  * A helper function to determine the number of cpustates in /proc/stat (MKN)
@@ -231,7 +190,7 @@ static char *find_cpu (char *p, int cpu_index, double *total_jiffies)
 static double total_jiffies_func (char *p)
 {
     unsigned long user_jiffies, nice_jiffies, system_jiffies, idle_jiffies,
-        wio_jiffies, irq_jiffies, sirq_jiffies;
+        wio_jiffies, irq_jiffies, sirq_jiffies, steal_jiffies;
 
     user_jiffies = strtod( p, &p );
     p = skip_whitespace(p);
@@ -251,8 +210,14 @@ static double total_jiffies_func (char *p)
     p = skip_whitespace(p);
     sirq_jiffies = strtod( p , &p );
     
+    if (num_cpustates == NUM_CPUSTATES_26X)
+        return user_jiffies + nice_jiffies + system_jiffies + idle_jiffies +
+            wio_jiffies + irq_jiffies + sirq_jiffies;
+
+    p = skip_whitespace(p);
+    steal_jiffies = strtod( p , &p );
     return user_jiffies + nice_jiffies + system_jiffies + idle_jiffies +
-        wio_jiffies + irq_jiffies + sirq_jiffies; 
+        wio_jiffies + irq_jiffies + sirq_jiffies + steal_jiffies;
 }   
 
 /* Common function to calculate the utilization */
@@ -489,6 +454,31 @@ static cpu_util *init_metric (apr_pool_t *p, apr_array_header_t *ar, int cpu_cou
     return cpu;
 }
 
+static g_val_t multi_cpu_steal_func (int cpu_index)
+{
+    char *p;
+    cpu_util *cpu = &(cpu_user[cpu_index]);
+
+    p = update_file(&proc_stat);
+    if((proc_stat.last_read.tv_sec != cpu->stamp.tv_sec) &&
+       (proc_stat.last_read.tv_usec != cpu->stamp.tv_usec)) {
+        cpu->stamp = proc_stat.last_read;
+
+        p = find_cpu (p, cpu_index, &cpu->curr_total_jiffies);
+        p = skip_token(p);
+        p = skip_token(p);
+        p = skip_token(p);
+        p = skip_token(p);
+        p = skip_token(p);
+        p = skip_token(p);
+        p = skip_token(p);
+        p = skip_whitespace(p);
+        calculate_utilization (p, cpu);
+    }
+
+    return cpu->val;
+}
+
 static int ex_metric_init (apr_pool_t *p)
 {
     int i;
@@ -523,6 +513,8 @@ static int ex_metric_init (apr_pool_t *p)
     cpu_sintr = init_metric (pool, metric_info, cpu_count, "multicpu_sintr", 
                             "Percentage of CPU utilization that occurred while "
                             "executing at the sintr level");
+    cpu_steal = init_metric (pool, metric_info, cpu_count, "multicpu_steal",
+                            "Percentage of CPU preempted by the hypervisor");
 
     /* Add a terminator to the array and replace the empty static metric definition 
         array with the dynamic array that we just created 
@@ -578,6 +570,9 @@ static g_val_t ex_metric_handler ( int metric_index )
 
     if (strcmp(name, "multicpu_sintr") == 0) 
         return multi_cpu_sintr_func(index);
+
+    if (strcmp(name, "multicpu_steal") == 0)
+        return multi_cpu_steal_func(index);
 
     /* default case */
     val.f = 0;

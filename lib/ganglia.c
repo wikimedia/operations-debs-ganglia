@@ -1,7 +1,6 @@
 /**
  * @file gexec_funcs.c Functions to support gexec, gstat et al
  */
-/* $Id$ */
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -69,7 +68,7 @@ start (void *data, const char *el, const char **attr)
             }
 
          strcpy(cluster->host->ip, attr[3]);
-         cluster->host->last_reported = atol(attr[5]);
+         cluster->host->last_reported = atol(attr[7]);
 
          if( abs(cluster->localtime - cluster->host->last_reported) < GEXEC_TIMEOUT )
             {
@@ -314,8 +313,8 @@ gexec_cluster (gexec_cluster_t *cluster, char *ip, unsigned short port)
            {
               gexec_errno = 7;
               err_msg ("gexec_cluster() XML_ParseBuffer() error at line %d:\n%s\n",
-              XML_GetCurrentLineNumber (xml_parser),
-              XML_ErrorString (XML_GetErrorCode (xml_parser)));
+                 (int) XML_GetCurrentLineNumber (xml_parser),
+                 XML_ErrorString (XML_GetErrorCode (xml_parser)));
               goto error;
            }
 
