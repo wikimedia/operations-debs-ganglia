@@ -1,4 +1,3 @@
-/* $Id$ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -14,6 +13,7 @@
 #include <apr_time.h>
 
 #include "daemon_init.h"
+#include "update_pidfile.h"
 
 #include "rrd_helpers.h"
 
@@ -152,7 +152,10 @@ sum_metrics(datum_t *key, datum_t *val, void *arg)
    if (do_sum)
       {
          tt = in_type_list(type, strlen(type));
-         if (!tt) return 0;
+         if (!tt) {
+            datum_free(hash_datum);
+            return 0;
+	 }
 
          /* We sum everything in double to properly combine integer sources
             (3.0) with float sources (3.1).  This also avoids wraparound
@@ -187,9 +190,14 @@ do_root_summary( datum_t *key, datum_t *val, void *arg )
 {
    Source_t *source = (Source_t*) val->data;
    int rc;
+   llist_entry *le;
 
    /* We skip dead sources. */
    if (source->ds->dead)
+      return 0;
+
+   /* We skip metrics not to be summarized. */
+   if (llist_search(&(gmetad_config.unsummarized_metrics), (void *)key->data, llist_strncmp, &le) == 0)
       return 0;
 
    /* Need to be sure the source has a complete sum for its metrics. */
@@ -218,6 +226,7 @@ write_root_summary(datum_t *key, datum_t *val, void *arg)
    Metric_t *metric;
    int rc;
    struct type_tag *tt;
+   llist_entry *le;
 
    name = (char*) key->data;
    metric = (Metric_t*) val->data;
@@ -225,8 +234,12 @@ write_root_summary(datum_t *key, datum_t *val, void *arg)
 
    /* Summarize all numeric metrics */
    tt = in_type_list(type, strlen(type));
-   /* Don't write a summary for an unknown or STRING type. */
-   if (!tt || (tt->type == STRING)) 
+   /* Don't write a summary for an unknown or STRING type */
+   if (!tt || (tt->type == STRING))
+       return 0;
+
+   /* Don't write a summary for metrics not to be summarized */
+   if (llist_search(&(gmetad_config.unsummarized_metrics), (void *)key->data, llist_strncmp, &le) == 0)
        return 0;
 
    /* We log all our sums in double which does not suffer from
@@ -237,7 +250,10 @@ write_root_summary(datum_t *key, datum_t *val, void *arg)
 
    /* err_msg("Writing Overall Summary for metric %s (%s)", name, sum); */
 
-   /* Save the data to a round robin database */
+   /* Save the data to a rrd file unless write_rrds == off */
+	 if (gmetad_config.write_rrds == 0)
+	     return 0;
+
    rc = write_data_to_rrd( NULL, NULL, name, sum, num, 15, 0, metric->slope);
    if (rc)
       {
@@ -256,6 +272,7 @@ main ( int argc, char *argv[] )
    pthread_attr_t attr;
    int i, num_sources;
    uid_t gmetad_uid;
+   mode_t rrd_umask;
    char * gmetad_username;
    struct passwd *pw;
    char hostname[HOSTNAMESZ];
@@ -324,7 +341,8 @@ main ( int argc, char *argv[] )
    /* Debug level 1 is error output only, and no daemonizing. */
    if (!debug_level)
       {
-         daemon_init (argv[0], 0);
+         rrd_umask = c->umask;
+         daemon_init (argv[0], 0, rrd_umask);
       }
 
    if (args_info.pid_file_given)
@@ -444,7 +462,7 @@ main ( int argc, char *argv[] )
 
          /* Save them to RRD */
          hash_foreach(root.metric_summary, write_root_summary, NULL);
-         
+
          /* Remember our last run */
          last_metadata = apr_time_now();
       }

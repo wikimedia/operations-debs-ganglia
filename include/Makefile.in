@@ -38,8 +38,8 @@ subdir = include
 DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/configure.in
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_compare_version.m4 \
+	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -106,6 +106,7 @@ GANGLIA_MICRO_VERSION = @GANGLIA_MICRO_VERSION@
 GANGLIA_MINOR_VERSION = @GANGLIA_MINOR_VERSION@
 GANGLIA_VERSION = @GANGLIA_VERSION@
 GREP = @GREP@
+GWEB_VERSION = @GWEB_VERSION@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -141,6 +142,14 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PERL_BIN = @PERL_BIN@
+PERL_CFLAGS = @PERL_CFLAGS@
+PERL_INCLUDES = @PERL_INCLUDES@
+PERL_LDFLAGS = @PERL_LDFLAGS@
+PHP_CONFIG_BIN = @PHP_CONFIG_BIN@
+PHP_INCLUDES = @PHP_INCLUDES@
+PHP_VERSION = @PHP_VERSION@
+PKG_CONFIG = @PKG_CONFIG@
 PYTHON_BIN = @PYTHON_BIN@
 PYTHON_INCLUDES = @PYTHON_INCLUDES@
 PYTHON_VERSION = @PYTHON_VERSION@
@@ -175,6 +184,7 @@ datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+gsysconfdir = @gsysconfdir@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -209,7 +219,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 varstatedir = @varstatedir@
-include_HEADERS = ganglia.h ganglia_gexec.h gm_mmn.h gm_metric.h gm_value.h gm_msg.h
+include_HEADERS = ganglia.h ganglia_gexec.h gm_mmn.h gm_metric.h gm_value.h gm_msg.h gm_file.h
 all: all-am
 
 .SUFFIXES:
@@ -222,9 +232,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu include/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign include/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu include/Makefile
+	  $(AUTOMAKE) --foreign include/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
